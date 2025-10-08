@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Starter HTML + CSS</title>
+
+  <!-- Link to your CSS -->
+  <link rel="stylesheet" href="./css/styles.css" />
+
+  <!-- Favicons (optional) -->
+  <!-- <link rel="icon" href="./assets/images/favicon.png" type="image/png" /> -->
+
+  <meta name="description" content="Simple starter for HTML + CSS" />
+</head>
+<body>
+  <header class="container">
+    <nav class="nav">
+      <a class="brand" href="/">MySite</a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#cta">Get Started</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>HTML + CSS Starter</h1>
+      <p>If you can see this, your setup works 🎉</p>
+      <a class="btn" href="#cta">Call to Action</a>
+    </section>
+
+    <section id="features" class="grid">
+      <article class="card">
+        <h2>Fast</h2>
+        <p>Minimal boilerplate so you can ship quickly.</p>
+      </article>
+      <article class="card">
+        <h2>Responsive</h2>
+        <p>Built-in fluid layout and sensible defaults.</p>
+      </article>
+      <article class="card">
+        <h2>Clean</h2>
+        <p>Reset, variables, and utility classes included.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="container">
+    <small>© <span id="year"></span> You</small>
+  </footer>
+
+  <script>
+    // tiny helper: current year in footer
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
