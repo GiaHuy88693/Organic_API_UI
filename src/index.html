@@ -1,59 +1,301 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="vi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Starter HTML + CSS</title>
-
-  <!-- Link to your CSS -->
-  <link rel="stylesheet" href="./css/styles.css" />
-
-  <!-- Favicons (optional) -->
-  <!-- <link rel="icon" href="./assets/images/favicon.png" type="image/png" /> -->
-
-  <meta name="description" content="Simple starter for HTML + CSS" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organic Store - Trang chủ</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Google Fonts: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
+    <style>
+        body {
+            font-family: 'Poppins', Arial, Helvetica, sans-serif;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+        }
+        
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .btn-add-cart {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 20px;
+        }
+        
+        .btn-add-cart:hover {
+            background: #218838;
+        }
+        
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <header class="container">
-    <nav class="nav">
-      <a class="brand" href="/">MySite</a>
-      <ul class="nav-links">
-        <li><a href="#features">Features</a></li>
-        <li><a href="#cta">Get Started</a></li>
-      </ul>
+    <!-- Loader -->
+    <div id="global-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; justify-content: center; align-items: center;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-success" href="/index.html">
+                <i class="bi bi-shop"></i> Organic Store
+            </a>
+            
+            <div class="d-flex align-items-center gap-3">
+                <a href="/pages/cart/view.html" class="position-relative text-dark">
+                    <i class="bi bi-cart3 fs-4"></i>
+                    <span class="cart-badge cart-count-badge">0</span>
+                </a>
+                
+                <div id="authButtons">
+                    <!-- Will be filled by JavaScript -->
+                </div>
+            </div>
+        </div>
     </nav>
-  </header>
 
-  <main class="container">
-    <section class="hero">
-      <h1>HTML + CSS Starter</h1>
-      <p>If you can see this, your setup works 🎉</p>
-      <a class="btn" href="#cta">Call to Action</a>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Chào mừng đến Organic Store</h1>
+            <p class="lead mb-4">Sản phẩm hữu cơ tươi ngon, an toàn cho sức khỏe</p>
+            <a href="/pages/products/list.html" class="btn btn-light btn-lg">
+                Mua sắm ngay <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
     </section>
 
-    <section id="features" class="grid">
-      <article class="card">
-        <h2>Fast</h2>
-        <p>Minimal boilerplate so you can ship quickly.</p>
-      </article>
-      <article class="card">
-        <h2>Responsive</h2>
-        <p>Built-in fluid layout and sensible defaults.</p>
-      </article>
-      <article class="card">
-        <h2>Clean</h2>
-        <p>Reset, variables, and utility classes included.</p>
-      </article>
+    <!-- Products Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold">Sản phẩm nổi bật</h2>
+                <a href="/pages/products/list.html" class="btn btn-outline-success">
+                    Xem tất cả <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            
+            <div id="productsContainer" class="row g-4">
+                <!-- Products will be loaded here -->
+                <div class="col-12 text-center">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
-  </main>
 
-  <footer class="container">
-    <small>© <span id="year"></span> You</small>
-  </footer>
+    <!-- Toastify JS -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- API Services -->
+    <!-- Config -->
+    <script src="assets/js/config.js"></script>
 
-  <script>
-    // tiny helper: current year in footer
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
+    <!-- API Service -->
+    <script src="assets/js/api-service.js"></script>
+    
+    <!-- Page Script -->
+    <script>
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            renderAuthButtons();
+            await loadFeaturedProducts();
+            await CartAPI.updateCartBadge();
+        });
+
+        // Render auth buttons
+        function renderAuthButtons() {
+            const authButtonsEl = document.getElementById('authButtons');
+            
+            if (AuthAPI.isLoggedIn()) {
+                const user = AuthAPI.getCurrentUser();
+                authButtonsEl.innerHTML = `
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> ${user?.name || 'User'}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/pages/user/dashboard.html">Dashboard</a></li>
+                            <li><a class="dropdown-item" href="/pages/user/orders.html">Đơn hàng</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()">Đăng xuất</a></li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                authButtonsEl.innerHTML = `
+                    <a href="/pages/auth/login.html" class="btn btn-sm btn-success">Đăng nhập</a>
+                    <a href="/pages/auth/register.html" class="btn btn-sm btn-outline-success">Đăng ký</a>
+                `;
+            }
+        }
+
+        // Load featured products
+        async function loadFeaturedProducts() {
+  try {
+    showLoading();
+    const response = await ProductAPI.getProducts({ 
+      page: 1,     // Backend dùng page
+      limit: 8     // Backend dùng limit
+    });
+    
+    const productsGrid = document.getElementById('products-grid');
+    
+    console.log('🔍 Products response:', response); // Debug
+    
+    // Backend có thể trả về response.data.data hoặc response.data
+    const products = response.data?.data || response.data || [];
+    
+    if (products.length > 0) {
+      productsGrid.innerHTML = products.map(product => `
+        <div class="product-card">
+          <div class="product-image">
+            <img src="${product.image || 'https://via.placeholder.com/300'}" 
+                 alt="${product.name}">
+          </div>
+          <div class="product-info">
+            <h3>${product.name}</h3>
+            <p class="product-description">${product.description || ''}</p>
+            <p class="product-price">${formatPrice(product.price)}</p>
+            <button onclick="addToCart('${product.id || product._id}')" class="btn btn-primary">
+              Thêm vào giỏ
+            </button>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      productsGrid.innerHTML = '<p>Chưa có sản phẩm nào</p>';
+    }
+  } catch (error) {
+    console.error('❌ Load products error:', error);
+    document.getElementById('products-grid').innerHTML = `
+      <div class="col-12">
+        <p class="text-center text-danger">Không thể tải sản phẩm: ${error.message}</p>
+      </div>
+    `;
+  } finally {
+    hideLoading();
+  }
+}
+
+        // Render products
+        function renderProducts(products) {
+            const container = document.getElementById('productsContainer');
+            
+            if (!products || products.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center">
+                        <p class="text-muted">Chưa có sản phẩm nào.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = products.map(product => `
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="product-card">
+                        <img src="${product.image || 'https://via.placeholder.com/300'}" 
+                             alt="${product.name}"
+                             onclick="window.location.href='/pages/products/detail.html?id=${product._id || product.id}'">
+                        <h6 class="mt-3 mb-2">${product.name}</h6>
+                        <p class="text-muted small mb-2">${truncateText(product.description || '', 60)}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong class="text-danger">${formatPrice(product.price)}</strong>
+                            <button class="btn btn-add-cart btn-sm" onclick="addToCart('${product._id || product.id}')">
+                                <i class="bi bi-cart-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Add to cart
+        async function addToCart(productId) {
+            if (!AuthAPI.isLoggedIn()) {
+                showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+                setTimeout(() => {
+                    window.location.href = '/pages/auth/login.html';
+                }, 1500);
+                return;
+            }
+
+            try {
+                await CartAPI.addToCart(productId, 1);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Logout
+        async function logout() {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) {
+                await AuthAPI.logout();
+            }
+        }
+
+        // Helper: truncate text
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        }
+    </script>
 </body>
 </html>

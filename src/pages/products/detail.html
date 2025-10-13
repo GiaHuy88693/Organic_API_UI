@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết sản phẩm - Organic Store</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Toastify -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
+    <style>
+        body {
+            font-family: 'Poppins', Arial, Helvetica, sans-serif;
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 500px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .thumbnail-images {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+        
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .thumbnail:hover,
+        .thumbnail.active {
+            border-color: #28a745;
+            transform: scale(1.05);
+        }
+        
+        .price-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        .price-main {
+            font-size: 32px;
+            font-weight: 700;
+            color: #dc3545;
+        }
+        
+        .price-original {
+            font-size: 20px;
+            color: #6c757d;
+            text-decoration: line-through;
+        }
+        
+        .discount-badge {
+            background: #dc3545;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .quantity-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .quantity-btn:hover {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        
+        .quantity-value {
+            font-size: 20px;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .btn-add-cart {
+            background: #28a745;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        .btn-add-cart:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .product-info-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 500;
+            border: none;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .product-info-tabs .nav-link.active {
+            color: #28a745;
+            border-bottom-color: #28a745;
+            background: transparent;
+        }
+        
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        
+        .breadcrumb-item a {
+            color: #28a745;
+            text-decoration: none;
+        }
+        
+        .breadcrumb-item.active {
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loader -->
+    <div id="global-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; justify-content: center; align-items: center;">
+        <div class="spinner-border text-success" role="status"></div>
+    </div>
+
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-success" href="/index.html">
+                <i class="bi bi-shop"></i> Organic Store
+            </a>
+            
+            <div class="d-flex align-items-center gap-3">
+                <a href="/pages/cart/view.html" class="position-relative text-dark">
+                    <i class="bi bi-cart3 fs-4"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-count-badge" style="display: none;">0</span>
+                </a>
+                
+                <div id="authButtons"></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="py-5">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/index.html">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="/pages/products/list.html">Sản phẩm</a></li>
+                    <li class="breadcrumb-item active" id="breadcrumbProduct">...</li>
+                </ol>
+            </nav>
+
+            <!-- Product Detail -->
+            <div id="productDetail">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-success" role="status"></div>
+                    <p class="mt-3">Đang tải sản phẩm...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Config -->
+    <script src="/assets/js/config.js"></script>
+
+    <!-- API Service -->
+    <script src="/assets/js/api-service.js"></script>
+    
+    <script>
+        let currentProduct = null;
+        let quantity = 1;
+
+        // Get product ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!productId) {
+                showError('Không tìm thấy sản phẩm');
+                return;
+            }
+
+            renderAuthButtons();
+            await loadProduct();
+            await CartAPI.updateCartBadge();
+        });
+
+        // Load product
+        async function loadProduct() {
+            try {
+                showLoading();
+                const response = await ProductAPI.getProductById(productId);
+
+                if (response.success && response.data) {
+                    currentProduct = response.data;
+                    renderProduct(response.data);
+                }
+            } catch (error) {
+                console.error('Load product error:', error);
+                showError('Không thể tải thông tin sản phẩm');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Render product
+        function renderProduct(product) {
+            document.getElementById('breadcrumbProduct').textContent = product.name;
+            document.title = `${product.name} - Organic Store`;
+
+            const container = document.getElementById('productDetail');
+            
+            container.innerHTML = `
+                <div class="row">
+                    <!-- Product Images -->
+                    <div class="col-lg-6 mb-4">
+                        <img src="${product.image || 'https://via.placeholder.com/500'}" 
+                             alt="${product.name}" 
+                             class="product-image" 
+                             id="mainImage">
+                        
+                        <div class="thumbnail-images">
+                            ${(product.images || [product.image]).map(img => `
+                                <img src="${img}" 
+                                     alt="${product.name}" 
+                                     class="thumbnail" 
+                                     onclick="changeMainImage('${img}')">
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="col-lg-6">
+                        <h1 class="mb-3">${product.name}</h1>
+                        
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="text-warning">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-half"></i>
+                            </div>
+                            <span class="text-muted">(24 đánh giá)</span>
+                        </div>
+
+                        <div class="price-section">
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <span class="price-main">${formatPrice(product.price)}</span>
+                                ${product.originalPrice ? `
+                                    <span class="price-original">${formatPrice(product.originalPrice)}</span>
+                                    <span class="discount-badge">-${calculateDiscount(product.originalPrice, product.price)}%</span>
+                                ` : ''}
+                            </div>
+                            <p class="mb-0 text-muted small">
+                                <i class="bi bi-check-circle text-success"></i> Còn hàng
+                            </p>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="mb-2">Mô tả:</h6>
+                            <p class="text-muted">${product.description || 'Chưa có mô tả'}</p>
+                        </div>
+
+                        <!-- Quantity Selector -->
+                        <div class="quantity-selector">
+                            <span class="fw-semibold">Số lượng:</span>
+                            <button class="quantity-btn" onclick="decreaseQuantity()">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <span class="quantity-value" id="quantityValue">1</span>
+                            <button class="quantity-btn" onclick="increaseQuantity()">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+
+                        <!-- Add to Cart -->
+                        <button class="btn-add-cart" onclick="addToCart()">
+                            <i class="bi bi-cart-plus me-2"></i>
+                            Thêm vào giỏ hàng
+                        </button>
+
+                        <!-- Product Meta -->
+                        <div class="mt-4 pt-4 border-top">
+                            <p class="mb-2">
+                                <strong>Danh mục:</strong> 
+                                <a href="#" class="text-success">${product.category?.name || 'Chưa phân loại'}</a>
+                            </p>
+                            <p class="mb-2">
+                                <strong>SKU:</strong> ${product.sku || 'N/A'}
+                            </p>
+                            <p class="mb-0">
+                                <strong>Chia sẻ:</strong>
+                                <a href="#" class="text-dark ms-2"><i class="bi bi-facebook"></i></a>
+                                <a href="#" class="text-dark ms-2"><i class="bi bi-twitter"></i></a>
+                                <a href="#" class="text-dark ms-2"><i class="bi bi-pinterest"></i></a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Tabs -->
+                <div class="mt-5">
+                    <ul class="nav nav-tabs product-info-tabs mb-4" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#description">
+                                Mô tả chi tiết
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reviews">
+                                Đánh giá (24)
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="description">
+                            <p>${product.detailedDescription || product.description || 'Chưa có mô tả chi tiết'}</p>
+                        </div>
+                        <div class="tab-pane fade" id="reviews">
+                            <p class="text-muted">Chưa có đánh giá nào.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Change main image
+        function changeMainImage(imgSrc) {
+            document.getElementById('mainImage').src = imgSrc;
+            
+            // Update active thumbnail
+            document.querySelectorAll('.thumbnail').forEach(thumb => {
+                thumb.classList.remove('active');
+                if (thumb.src === imgSrc) {
+                    thumb.classList.add('active');
+                }
+            });
+        }
+
+        // Quantity controls
+        function decreaseQuantity() {
+            if (quantity > 1) {
+                quantity--;
+                document.getElementById('quantityValue').textContent = quantity;
+            }
+        }
+
+        function increaseQuantity() {
+            quantity++;
+            document.getElementById('quantityValue').textContent = quantity;
+        }
+
+        // Add to cart
+        async function addToCart() {
+            if (!AuthAPI.isLoggedIn()) {
+                showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+                setTimeout(() => {
+                    window.location.href = '/pages/auth/login.html';
+                }, 1500);
+                return;
+            }
+
+            try {
+                await CartAPI.addToCart(productId, quantity);
+                quantity = 1;
+                document.getElementById('quantityValue').textContent = 1;
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Show error
+        function showError(message) {
+            document.getElementById('productDetail').innerHTML = `
+                <div class="alert alert-danger text-center">
+                    <i class="bi bi-exclamation-triangle fs-1 d-block mb-3"></i>
+                    <p class="mb-3">${message}</p>
+                    <a href="/pages/products/list.html" class="btn btn-success">
+                        Xem danh sách sản phẩm
+                    </a>
+                </div>
+            `;
+        }
+
+        // Helper functions
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(price);
+        }
+
+        function calculateDiscount(original, sale) {
+            return Math.round(((original - sale) / original) * 100);
+        }
+
+        function renderAuthButtons() {
+            const authButtonsEl = document.getElementById('authButtons');
+            
+            if (AuthAPI.isLoggedIn()) {
+                const user = AuthAPI.getCurrentUser();
+                authButtonsEl.innerHTML = `
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> ${user?.name || 'User'}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/pages/user/dashboard.html">Dashboard</a></li>
+                            <li><a class="dropdown-item" href="/pages/user/orders.html">Đơn hàng</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()">Đăng xuất</a></li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                authButtonsEl.innerHTML = `
+                    <a href="/pages/auth/login.html" class="btn btn-sm btn-success">Đăng nhập</a>
+                `;
+            }
+        }
+
+        async function logout() {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) {
+                await AuthAPI.logout();
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('global-loader').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('global-loader').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sản phẩm - Organic Store</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-success" href="/index.html">
+                <i class="bi bi-shop"></i> Organic Store
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index.html">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/pages/products/list.html">Sản phẩm</a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3 ms-3">
+                <a href="/pages/cart/view.html" class="position-relative text-dark">
+                    <i class="bi bi-cart3 fs-4"></i>
+                    <span class="cart-count-badge position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
+                </a>
+                <div id="authButtons"></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/index.html">Trang chủ</a></li>
+                <li class="breadcrumb-item active">Sản phẩm</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <section class="py-4">
+        <div class="container">
+            <div class="row">
+                <!-- Sidebar Filters -->
+                <div class="col-lg-3 mb-4">
+                    <div class="filter-sidebar">
+                        <!-- Search -->
+                        <div class="filter-section">
+                            <h6 class="filter-title">Tìm kiếm</h6>
+                            <input type="text" class="form-control" id="searchInput" placeholder="Tìm sản phẩm...">
+                        </div>
+
+                        <!-- Categories -->
+                        <div class="filter-section">
+                            <h6 class="filter-title">Danh mục</h6>
+                            <div id="categoryFilters">
+                                <div class="filter-option">
+                                    <input type="radio" name="category" value="" id="cat-all" checked>
+                                    <label for="cat-all">Tất cả</label>
+                                </div>
+                                <!-- Will be filled by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="filter-section">
+                            <h6 class="filter-title">Khoảng giá</h6>
+                            <div class="mb-3">
+                                <label class="form-label small">Từ:</label>
+                                <input type="number" class="form-control" id="minPrice" placeholder="0">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Đến:</label>
+                                <input type="number" class="form-control" id="maxPrice" placeholder="1,000,000">
+                            </div>
+                            <button class="btn btn-success btn-sm w-100" onclick="applyFilters()">
+                                Áp dụng
+                            </button>
+                        </div>
+
+                        <!-- Clear Filters -->
+                        <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters()">
+                            <i class="bi bi-x-circle"></i> Xóa bộ lọc
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="col-lg-9">
+                    <!-- Sort & View Options -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <p class="mb-0 text-muted">
+                            Hiển thị <span id="showingCount">0</span> sản phẩm
+                        </p>
+                        <div class="d-flex gap-2 align-items-center">
+                            <select class="form-select form-select-sm" id="sortBy" style="width: auto;">
+                                <option value="">Sắp xếp</option>
+                                <option value="name-asc">Tên: A-Z</option>
+                                <option value="name-desc">Tên: Z-A</option>
+                                <option value="price-asc">Giá: Thấp đến Cao</option>
+                                <option value="price-desc">Giá: Cao đến Thấp</option>
+                            </select>
+                            
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-secondary active" id="gridView">
+                                    <i class="bi bi-grid-3x3-gap"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="listView">
+                                    <i class="bi bi-list"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Container -->
+                    <div class="row g-4" id="productsContainer">
+                        <div class="col-12 text-center py-5">
+                            <div class="spinner-border text-success" role="status"></div>
+                            <p class="mt-3 text-muted">Đang tải sản phẩm...</p>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center" id="pagination"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Config -->
+    <script src="/assets/js/config.js"></script>
+
+    <!-- API Service -->
+    <script src="/assets/js/api-service.js"></script>
+    
+    <script>
+        let currentPage = 0;
+        const pageSize = 12;
+        let filters = {
+            search: '',
+            categoryId: '',
+            minPrice: '',
+            maxPrice: '',
+            sortBy: '',
+            sortOrder: 'desc',
+        };
+        let viewMode = 'grid'; // grid or list
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            renderAuthButtons();
+            await loadCategories();
+            await loadProducts();
+            await CartAPI.updateCartBadge();
+
+            // Event listeners
+            document.getElementById('searchInput').addEventListener('input', debounce(() => {
+                filters.search = document.getElementById('searchInput').value;
+                currentPage = 0;
+                loadProducts();
+            }, 500));
+
+            document.getElementById('sortBy').addEventListener('change', (e) => {
+                const value = e.target.value;
+                if (value) {
+                    const [field, order] = value.split('-');
+                    filters.sortBy = field;
+                    filters.sortOrder = order;
+                } else {
+                    filters.sortBy = '';
+                    filters.sortOrder = 'desc';
+                }
+                currentPage = 0;
+                loadProducts();
+            });
+
+            document.getElementById('gridView').addEventListener('click', () => {
+                viewMode = 'grid';
+                document.getElementById('gridView').classList.add('active');
+                document.getElementById('listView').classList.remove('active');
+                loadProducts();
+            });
+
+            document.getElementById('listView').addEventListener('click', () => {
+                viewMode = 'list';
+                document.getElementById('listView').classList.add('active');
+                document.getElementById('gridView').classList.remove('active');
+                loadProducts();
+            });
+        });
+
+        // Load categories
+        async function loadCategories() {
+            try {
+                const response = await CategoryAPI.getCategories();
+                if (response.success && response.data) {
+                    const categories = response.data.categories || response.data;
+                    const container = document.getElementById('categoryFilters');
+                    
+                    categories.forEach(cat => {
+                        container.innerHTML += `
+                            <div class="filter-option">
+                                <input type="radio" name="category" value="${cat._id}" id="cat-${cat._id}" onchange="filterByCategory('${cat._id}')">
+                                <label for="cat-${cat._id}">${cat.name}</label>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (error) {
+                console.error('Load categories error:', error);
+            }
+        }
+
+        // Load products
+        async function loadProducts() {
+            try {
+                showLoading();
+                
+                const response = await ProductAPI.getProducts({
+                    skip: currentPage * pageSize,
+                    take: pageSize,
+                    ...filters,
+                });
+
+                if (response.success && response.data) {
+                    const products = response.data.products || response.data;
+                    const total = response.data.total || products.length;
+                    
+                    renderProducts(products);
+                    renderPagination(total);
+                    
+                    document.getElementById('showingCount').textContent = products.length;
+                }
+            } catch (error) {
+                console.error('Load products error:', error);
+                document.getElementById('productsContainer').innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-warning text-center">
+                            Không thể tải sản phẩm. Vui lòng thử lại sau.
+                        </div>
+                    </div>
+                `;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Render products
+        function renderProducts(products) {
+            const container = document.getElementById('productsContainer');
+            
+            if (products.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="empty-state">
+                            <i class="bi bi-box-seam empty-state-icon"></i>
+                            <h5 class="empty-state-title">Không tìm thấy sản phẩm</h5>
+                            <p class="empty-state-description">Hãy thử tìm kiếm với từ khóa khác</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (viewMode === 'grid') {
+                container.innerHTML = products.map(product => `
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="product-card">
+                            ${product.discount ? `<div class="product-card-badge">-${product.discount}%</div>` : ''}
+                            <div class="product-card-wishlist">
+                                <i class="bi bi-heart"></i>
+                            </div>
+                            <img src="${product.image || 'https://via.placeholder.com/300'}" 
+                                 alt="${product.name}"
+                                 class="product-card-image"
+                                 onclick="window.location.href='/pages/products/detail.html?id=${product._id}'">
+                            <h6 class="product-card-title">${product.name}</h6>
+                            <p class="product-card-description">${truncateText(product.description || '', 60)}</p>
+                            <div class="product-card-price">
+                                ${formatPrice(product.price)}
+                                ${product.originalPrice ? `<span class="product-card-price-original">${formatPrice(product.originalPrice)}</span>` : ''}
+                            </div>
+                            <div class="product-card-actions">
+                                <button class="btn btn-success btn-sm flex-grow-1" onclick="addToCart('${product._id}')">
+                                    <i class="bi bi-cart-plus"></i> Thêm
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" onclick="window.location.href='/pages/products/detail.html?id=${product._id}'">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                // List view
+                container.innerHTML = products.map(product => `
+                    <div class="col-12">
+                        <div class="card mb-3">
+                            <div class="row g-0">
+                                <div class="col-md-3">
+                                    <img src="${product.image || 'https://via.placeholder.com/300'}" 
+                                         alt="${product.name}"
+                                         class="img-fluid rounded-start h-100 object-fit-cover"
+                                         onclick="window.location.href='/pages/products/detail.html?id=${product._id}'"
+                                         style="cursor: pointer;">
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${product.name}</h5>
+                                        <p class="card-text">${product.description || 'Chưa có mô tả'}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="h4 text-success mb-0">${formatPrice(product.price)}</span>
+                                            <div>
+                                                <button class="btn btn-success" onclick="addToCart('${product._id}')">
+                                                    <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                                </button>
+                                                <button class="btn btn-outline-success" onclick="window.location.href='/pages/products/detail.html?id=${product._id}'">
+                                                    <i class="bi bi-eye"></i> Xem chi tiết
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Render pagination
+        function renderPagination(total) {
+            const totalPages = Math.ceil(total / pageSize);
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+            `;
+
+            for (let i = 0; i < totalPages; i++) {
+                if (i === 0 || i === totalPages - 1 || Math.abs(i - currentPage) <= 1) {
+                    html += `
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i + 1}</a>
+                        </li>
+                    `;
+                } else if (Math.abs(i - currentPage) === 2) {
+                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+
+            html += `
+                <li class="page-item ${currentPage === totalPages - 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            `;
+
+            pagination.innerHTML = html;
+        }
+
+        // Change page
+        function changePage(page) {
+            currentPage = page;
+            loadProducts();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Filter by category
+        function filterByCategory(categoryId) {
+            filters.categoryId = categoryId;
+            currentPage = 0;
+            loadProducts();
+        }
+
+        // Apply filters
+        function applyFilters() {
+            filters.minPrice = document.getElementById('minPrice').value;
+            filters.maxPrice = document.getElementById('maxPrice').value;
+            currentPage = 0;
+            loadProducts();
+        }
+
+        // Clear filters
+        function clearFilters() {
+            filters = {
+                search: '',
+                categoryId: '',
+                minPrice: '',
+                maxPrice: '',
+                sortBy: '',
+                sortOrder: 'desc',
+            };
+            
+            document.getElementById('searchInput').value = '';
+            document.getElementById('minPrice').value = '';
+            document.getElementById('maxPrice').value = '';
+            document.getElementById('sortBy').value = '';
+            document.getElementById('cat-all').checked = true;
+            
+            currentPage = 0;
+            loadProducts();
+        }
+
+        // Add to cart
+        async function addToCart(productId) {
+            if (!AuthAPI.isLoggedIn()) {
+                showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+                setTimeout(() => {
+                    window.location.href = '/pages/auth/login.html';
+                }, 1500);
+                return;
+            }
+
+            try {
+                await CartAPI.addToCart(productId, 1);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Helpers
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(price);
+        }
+
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        function renderAuthButtons() {
+            const authButtonsEl = document.getElementById('authButtons');
+            
+            if (AuthAPI.isLoggedIn()) {
+                const user = AuthAPI.getCurrentUser();
+                authButtonsEl.innerHTML = `
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> ${user?.name || 'User'}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/pages/user/dashboard.html">Dashboard</a></li>
+                            <li><a class="dropdown-item" href="/pages/user/orders.html">Đơn hàng</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()">Đăng xuất</a></li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                authButtonsEl.innerHTML = `
+                    <a href="/pages/auth/login.html" class="btn btn-sm btn-success">Đăng nhập</a>
+                `;
+            }
+        }
+
+        async function logout() {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) {
+                await AuthAPI.logout();
+            }
+        }
+
+        function showLoading() {
+            // Can implement global loader
+        }
+
+        function hideLoading() {
+            // Can implement global loader
+        }
+    </script>
+</body>
+</html>
