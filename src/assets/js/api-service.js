@@ -1,11 +1,3 @@
-/**
- * API Service for Organic Store
- * Minimal version - Copy this into assets/js/api-service.js
- */
-
-// ============================================
-// CORE API SERVICE
-// ============================================
 class CoreApiService {
   constructor() {
     this.baseUrl = CONFIG.API_BASE_URL;
@@ -29,14 +21,17 @@ class CoreApiService {
     });
   }
 
-  getHeaders(isFormData = false) {
+  getHeaders(isFormData = false, includeAuth = true) {
     const headers = {};
     if (!isFormData) {
       headers['Content-Type'] = 'application/json';
     }
-    const token = this.getToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    
+    if (includeAuth) {
+      const token = this.getToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
     }
     return headers;
   }
@@ -59,7 +54,7 @@ class CoreApiService {
         success: true,
         statusCode: data.statusCode || response.status,
         message: data.message || 'Success',
-        data: data.data,
+        data: data.data || data,
       };
     }
 
@@ -80,12 +75,12 @@ class CoreApiService {
 
   async request(endpoint, options = {}) {
     try {
-      const { method = 'GET', body, params, isFormData = false } = options;
+      const { method = 'GET', body, params, isFormData = false, includeAuth = true } = options;
       const url = this.buildUrl(endpoint, params);
       
       const config = {
         method,
-        headers: this.getHeaders(isFormData),
+        headers: this.getHeaders(isFormData, includeAuth),
       };
 
       if (body) {
@@ -100,12 +95,12 @@ class CoreApiService {
     }
   }
 
-  get(endpoint, params) {
-    return this.request(endpoint, { method: 'GET', params });
+  get(endpoint, params, includeAuth = true) {
+    return this.request(endpoint, { method: 'GET', params, includeAuth });
   }
 
-  post(endpoint, body, isFormData = false) {
-    return this.request(endpoint, { method: 'POST', body, isFormData });
+  post(endpoint, body, isFormData = false, includeAuth = true) {
+    return this.request(endpoint, { method: 'POST', body, isFormData, includeAuth });
   }
 
   patch(endpoint, body) {
@@ -125,7 +120,15 @@ const apiService = new CoreApiService();
 const AuthAPI = {
   async register(userData) {
     try {
-      const response = await apiService.post('/auth/register', userData);
+      const response = await apiService.post('/auth/register', {
+        fullname: userData.name,
+        email: userData.email,
+        phoneNumber: userData.phone,
+        password: userData.password,
+        confirmPassword: userData.password,
+        code: userData.otp,
+      }, false, false); // không cần auth cho register
+      
       if (response.success) {
         showToast('Đăng ký thành công!', 'success');
       }
@@ -138,7 +141,11 @@ const AuthAPI = {
 
   async sendOTP(email) {
     try {
-      const response = await apiService.post('/auth/otp', { email });
+      const response = await apiService.post('/auth/otp', { 
+        email, 
+        type: 'REGISTER' 
+      }, false, false); // không cần auth cho sendOTP
+      
       if (response.success) {
         showToast('Mã OTP đã được gửi', 'success');
       }
@@ -151,20 +158,31 @@ const AuthAPI = {
 
   async login(email, password) {
     try {
-      const response = await apiService.post('/auth/login', { email, password });
+      const response = await apiService.post('/auth/login', { 
+        email, 
+        password 
+      }, false, false); // không cần auth cho login
+
+      console.log('Login response:', response);
 
       if (response.success && response.data) {
+        // Backend trả về accessToken và refreshToken
         apiService.saveTokens(
-          response.data.access_token,
-          response.data.refresh_token
+          response.data.accessToken,
+          response.data.refreshToken
         );
 
-        const profile = await this.getProfile();
-        if (profile.success) {
-          localStorage.setItem(
-            CONFIG.STORAGE.USER_INFO,
-            JSON.stringify(profile.data)
-          );
+        // Lấy thông tin profile sau khi login
+        try {
+          const profile = await this.getProfile();
+          if (profile.success) {
+            localStorage.setItem(
+              CONFIG.STORAGE.USER_INFO,
+              JSON.stringify(profile.data)
+            );
+          }
+        } catch (profileError) {
+          console.error('Get profile error:', profileError);
         }
 
         showToast('Đăng nhập thành công!', 'success');
@@ -180,7 +198,9 @@ const AuthAPI = {
   async logout() {
     try {
       const refreshToken = localStorage.getItem(CONFIG.STORAGE.REFRESH_TOKEN);
-      await apiService.post('/auth/logout', { refresh_token: refreshToken });
+      if (refreshToken) {
+        await apiService.post('/auth/logout', { refreshToken: refreshToken });
+      }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -240,7 +260,7 @@ const AuthAPI = {
 
   isAdmin() {
     const user = this.getCurrentUser();
-    return user && user.role === 'admin';
+    return user && user.role && user.role.name === 'admin';
   },
 };
 
@@ -249,22 +269,27 @@ const AuthAPI = {
 // ============================================
 const ProductAPI = {
   async getProducts(options = {}) {
-    // Backend dùng page/limit thay vì skip/take
     const params = {
-      page: options.page || 1,
-      limit: options.limit || 12,
+      page: Math.floor((options.skip || 0) / (options.take || 12)) + 1,
+      limit: options.take || 12,
       search: options.search || '',
+      categoryId: options.categoryId || '',
+      minPrice: options.minPrice || '',
+      maxPrice: options.maxPrice || '',
+      sortBy: options.sortBy || '',
+      sortOrder: options.sortOrder || 'desc',
     };
 
-    return await apiService.get('/product/pagination', params);
+    // Gọi API có thể không cần auth (public endpoint)
+    return await apiService.get('/product/pagination', params, false);
   },
 
   async getProductById(id) {
-    return await apiService.get(`/product/${id}`);
+    return await apiService.get(`/product/${id}`, {}, false);
   },
 
   async getAllProducts() {
-    return await apiService.get('/product');
+    return await apiService.get('/product', {}, false);
   },
 
   async createProduct(data) {
@@ -370,27 +395,41 @@ const CartAPI = {
   },
 
   async getCart() {
-    const params = { skip: 0, take: 100 };
+    const params = { page: 1, limit: 100 };
     return await apiService.get('/cart/pagination', params);
   },
 
   async updateCartBadge() {
     try {
+      if (!AuthAPI.isLoggedIn()) {
+        // Nếu không đăng nhập, ẩn badge
+        const badges = document.querySelectorAll('.cart-count-badge');
+        badges.forEach(badge => {
+          badge.style.display = 'none';
+        });
+        return;
+      }
+
       const response = await this.getCart();
-      if (response.success && response.data) {
-        const totalItems = response.data.items.reduce(
+      if (response.success && response.data && response.data.data) {
+        const totalItems = response.data.data.reduce(
           (sum, item) => sum + item.quantity,
           0
         );
 
-        const badge = document.querySelector('.cart-count-badge');
-        if (badge) {
+        const badges = document.querySelectorAll('.cart-count-badge');
+        badges.forEach(badge => {
           badge.textContent = totalItems;
           badge.style.display = totalItems > 0 ? 'inline-block' : 'none';
-        }
+        });
       }
     } catch (error) {
       console.error('Update cart badge error:', error);
+      // Ẩn badge nếu có lỗi
+      const badges = document.querySelectorAll('.cart-count-badge');
+      badges.forEach(badge => {
+        badge.style.display = 'none';
+      });
     }
   },
 };
@@ -400,11 +439,11 @@ const CartAPI = {
 // ============================================
 const CategoryAPI = {
   async getCategories() {
-    return await apiService.get('/category');
+    return await apiService.get('/category', {}, false);
   },
 
   async getCategoryById(id) {
-    return await apiService.get(`/category/${id}`);
+    return await apiService.get(`/category/${id}`, {}, false);
   },
 };
 
@@ -428,8 +467,8 @@ const OrderAPI = {
 
   async getOrders(options = {}) {
     const params = {
-      skip: options.skip || 0,
-      take: options.take || 10,
+      page: Math.floor((options.skip || 0) / (options.take || 10)) + 1,
+      limit: options.take || 10,
     };
     return await apiService.get('/order/pagination', params);
   },

@@ -189,51 +189,24 @@
 
         // Load featured products
         async function loadFeaturedProducts() {
-  try {
-    showLoading();
-    const response = await ProductAPI.getProducts({ 
-      page: 1,     // Backend dùng page
-      limit: 8     // Backend dùng limit
-    });
-    
-    const productsGrid = document.getElementById('products-grid');
-    
-    console.log('🔍 Products response:', response); // Debug
-    
-    // Backend có thể trả về response.data.data hoặc response.data
-    const products = response.data?.data || response.data || [];
-    
-    if (products.length > 0) {
-      productsGrid.innerHTML = products.map(product => `
-        <div class="product-card">
-          <div class="product-image">
-            <img src="${product.image || 'https://via.placeholder.com/300'}" 
-                 alt="${product.name}">
-          </div>
-          <div class="product-info">
-            <h3>${product.name}</h3>
-            <p class="product-description">${product.description || ''}</p>
-            <p class="product-price">${formatPrice(product.price)}</p>
-            <button onclick="addToCart('${product.id || product._id}')" class="btn btn-primary">
-              Thêm vào giỏ
-            </button>
-          </div>
-        </div>
-      `).join('');
-    } else {
-      productsGrid.innerHTML = '<p>Chưa có sản phẩm nào</p>';
-    }
-  } catch (error) {
-    console.error('❌ Load products error:', error);
-    document.getElementById('products-grid').innerHTML = `
-      <div class="col-12">
-        <p class="text-center text-danger">Không thể tải sản phẩm: ${error.message}</p>
-      </div>
-    `;
-  } finally {
-    hideLoading();
-  }
-}
+            try {
+                const response = await ProductAPI.getProducts({
+                    skip: 0,
+                    take: 8,
+                });
+
+                if (response.success && response.data) {
+                    renderProducts(response.data.products || response.data);
+                }
+            } catch (error) {
+                console.error('Load products error:', error);
+                document.getElementById('productsContainer').innerHTML = `
+                    <div class="col-12 text-center">
+                        <p class="text-muted">Không thể tải sản phẩm. Vui lòng thử lại sau.</p>
+                    </div>
+                `;
+            }
+        }
 
         // Render products
         function renderProducts(products) {

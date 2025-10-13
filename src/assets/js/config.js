@@ -1,5 +1,5 @@
 const CONFIG = {
-  // ⭐ QUAN TRỌNG: Đổi URL này khi deploy
+  // API BASE URL - đúng port backend
   API_BASE_URL: 'http://localhost:8080',
   API_PREFIX: '/api/v1',
   
