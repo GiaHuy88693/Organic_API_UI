@@ -2,6 +2,8 @@ class CoreApiService {
   constructor() {
     this.baseUrl = CONFIG.API_BASE_URL;
     this.apiPrefix = CONFIG.API_PREFIX;
+    // TODO: Thay token này bằng token từ Swagger
+    this.fallbackToken = 'PASTE_YOUR_TOKEN_HERE';
   }
 
   getToken() {
@@ -21,18 +23,25 @@ class CoreApiService {
     });
   }
 
-  getHeaders(isFormData = false, includeAuth = true) {
+  getHeaders(isFormData = false, requireAuth = true) {
     const headers = {};
     if (!isFormData) {
       headers['Content-Type'] = 'application/json';
     }
     
-    if (includeAuth) {
-      const token = this.getToken();
+    if (requireAuth) {
+      let token = this.getToken();
+      
+      // Nếu user chưa đăng nhập, dùng fallback token
+      if (!token) {
+        token = this.fallbackToken;
+      }
+      
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
     }
+    
     return headers;
   }
 
@@ -59,10 +68,13 @@ class CoreApiService {
     }
 
     if (response.status === 401) {
-      this.clearAuth();
-      if (!window.location.pathname.includes('/auth/login')) {
-        showToast('Phiên đăng nhập hết hạn', 'error');
-        setTimeout(() => window.location.href = '/pages/auth/login.html', 1000);
+      // Nếu là user token bị lỗi, clear auth
+      if (this.getToken()) {
+        this.clearAuth();
+        if (!window.location.pathname.includes('/auth/login')) {
+          showToast('Phiên đăng nhập hết hạn', 'error');
+          setTimeout(() => window.location.href = '/pages/auth/login.html', 1000);
+        }
       }
     }
 
@@ -75,12 +87,12 @@ class CoreApiService {
 
   async request(endpoint, options = {}) {
     try {
-      const { method = 'GET', body, params, isFormData = false, includeAuth = true } = options;
+      const { method = 'GET', body, params, isFormData = false, requireAuth = true } = options;
       const url = this.buildUrl(endpoint, params);
       
       const config = {
         method,
-        headers: this.getHeaders(isFormData, includeAuth),
+        headers: this.getHeaders(isFormData, requireAuth),
       };
 
       if (body) {
@@ -95,12 +107,12 @@ class CoreApiService {
     }
   }
 
-  get(endpoint, params, includeAuth = true) {
-    return this.request(endpoint, { method: 'GET', params, includeAuth });
+  get(endpoint, params, requireAuth = true) {
+    return this.request(endpoint, { method: 'GET', params, requireAuth });
   }
 
-  post(endpoint, body, isFormData = false, includeAuth = true) {
-    return this.request(endpoint, { method: 'POST', body, isFormData, includeAuth });
+  post(endpoint, body, isFormData = false, requireAuth = true) {
+    return this.request(endpoint, { method: 'POST', body, isFormData, requireAuth });
   }
 
   patch(endpoint, body) {
@@ -127,7 +139,7 @@ const AuthAPI = {
         password: userData.password,
         confirmPassword: userData.password,
         code: userData.otp,
-      }, false, false); // không cần auth cho register
+      }, false, false);
       
       if (response.success) {
         showToast('Đăng ký thành công!', 'success');
@@ -144,7 +156,7 @@ const AuthAPI = {
       const response = await apiService.post('/auth/otp', { 
         email, 
         type: 'REGISTER' 
-      }, false, false); // không cần auth cho sendOTP
+      }, false, false);
       
       if (response.success) {
         showToast('Mã OTP đã được gửi', 'success');
@@ -161,18 +173,16 @@ const AuthAPI = {
       const response = await apiService.post('/auth/login', { 
         email, 
         password 
-      }, false, false); // không cần auth cho login
+      }, false, false);
 
       console.log('Login response:', response);
 
       if (response.success && response.data) {
-        // Backend trả về accessToken và refreshToken
         apiService.saveTokens(
           response.data.accessToken,
           response.data.refreshToken
         );
 
-        // Lấy thông tin profile sau khi login
         try {
           const profile = await this.getProfile();
           if (profile.success) {
@@ -280,16 +290,15 @@ const ProductAPI = {
       sortOrder: options.sortOrder || 'desc',
     };
 
-    // Gọi API có thể không cần auth (public endpoint)
-    return await apiService.get('/product/pagination', params, false);
+    return await apiService.get('/product/pagination', params, true);
   },
 
   async getProductById(id) {
-    return await apiService.get(`/product/${id}`, {}, false);
+    return await apiService.get(`/product/${id}`, {}, true);
   },
 
   async getAllProducts() {
-    return await apiService.get('/product', {}, false);
+    return await apiService.get('/product', {}, true);
   },
 
   async createProduct(data) {
@@ -402,7 +411,6 @@ const CartAPI = {
   async updateCartBadge() {
     try {
       if (!AuthAPI.isLoggedIn()) {
-        // Nếu không đăng nhập, ẩn badge
         const badges = document.querySelectorAll('.cart-count-badge');
         badges.forEach(badge => {
           badge.style.display = 'none';
@@ -425,7 +433,6 @@ const CartAPI = {
       }
     } catch (error) {
       console.error('Update cart badge error:', error);
-      // Ẩn badge nếu có lỗi
       const badges = document.querySelectorAll('.cart-count-badge');
       badges.forEach(badge => {
         badge.style.display = 'none';
@@ -439,11 +446,11 @@ const CartAPI = {
 // ============================================
 const CategoryAPI = {
   async getCategories() {
-    return await apiService.get('/category', {}, false);
+    return await apiService.get('/category', {}, true);
   },
 
   async getCategoryById(id) {
-    return await apiService.get(`/category/${id}`, {}, false);
+    return await apiService.get(`/category/${id}`, {}, true);
   },
 };
 
@@ -535,4 +542,4 @@ function formatPrice(price) {
   }).format(price);
 }
 
-console.log('✅ API Service loaded successfully!');
+console.log('✅ API Service with Fallback Token loaded successfully!');
