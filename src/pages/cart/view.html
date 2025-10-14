@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng - Organic Store</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-success" href="/index.html">
+                <i class="bi bi-shop"></i> Organic Store
+            </a>
+            <div class="ms-auto">
+                <span id="userName"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/index.html">Trang chủ</a></li>
+                <li class="breadcrumb-item active">Giỏ hàng</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Cart Content -->
+    <section class="py-4">
+        <div class="container">
+            <div class="row">
+                <!-- Cart Items -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-cart3 me-2"></i>
+                                Giỏ hàng của bạn (<span id="totalItems">0</span> sản phẩm)
+                            </h5>
+                        </div>
+                        <div class="card-body" id="cartItemsContainer">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-success" role="status"></div>
+                                <p class="mt-3 text-muted">Đang tải giỏ hàng...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="col-lg-4">
+                    <div class="card sticky-top" style="top: 20px;">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">Tổng đơn hàng</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tạm tính:</span>
+                                <span id="subtotal">0đ</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Phí vận chuyển:</span>
+                                <span id="shippingFee" class="text-success">Miễn phí</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-3">
+                                <strong>Tổng cộng:</strong>
+                                <strong class="text-success h4" id="totalPrice">0đ</strong>
+                            </div>
+
+                            <button class="btn btn-success w-100 mb-2" onclick="checkout()" id="checkoutBtn">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Tiến hành thanh toán
+                            </button>
+                            
+                            <a href="/pages/products/list.html" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-arrow-left me-2"></i>
+                                Tiếp tục mua sắm
+                            </a>
+
+                            <!-- Promo Code -->
+                            <div class="mt-3">
+                                <label class="form-label small">Mã giảm giá:</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Nhập mã">
+                                    <button class="btn btn-outline-success">Áp dụng</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Config -->
+    <script src="/assets/js/config.js"></script>
+
+    <!-- API Service -->
+    <script src="/assets/js/api-service.js"></script>
+    
+    <script>
+        // Check login
+        if (!AuthAPI.isLoggedIn()) {
+            showToast('Vui lòng đăng nhập để xem giỏ hàng', 'warning');
+            setTimeout(() => {
+                window.location.href = '/pages/auth/login.html';
+            }, 1500);
+        }
+
+        let cartItems = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = AuthAPI.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = `Xin chào, ${user.name}`;
+            }
+            
+            await loadCart();
+        });
+
+        // Load cart
+        async function loadCart() {
+            try {
+                const response = await CartAPI.getCart();
+                
+                if (response.success && response.data) {
+                    cartItems = response.data.items || [];
+                    renderCart();
+                    calculateTotal();
+                }
+            } catch (error) {
+                console.error('Load cart error:', error);
+                document.getElementById('cartItemsContainer').innerHTML = `
+                    <div class="alert alert-danger">
+                        Không thể tải giỏ hàng. Vui lòng thử lại sau.
+                    </div>
+                `;
+            }
+        }
+
+        // Render cart
+        function renderCart() {
+            const container = document.getElementById('cartItemsContainer');
+            
+            if (cartItems.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-cart-x empty-state-icon"></i>
+                        <h5 class="empty-state-title">Giỏ hàng trống</h5>
+                        <p class="empty-state-description">Hãy thêm sản phẩm vào giỏ hàng nhé!</p>
+                        <a href="/pages/products/list.html" class="btn btn-success">
+                            <i class="bi bi-shop me-2"></i>
+                            Mua sắm ngay
+                        </a>
+                    </div>
+                `;
+                document.getElementById('checkoutBtn').disabled = true;
+                return;
+            }
+
+            document.getElementById('totalItems').textContent = cartItems.length;
+            document.getElementById('checkoutBtn').disabled = false;
+
+            container.innerHTML = cartItems.map(item => `
+                <div class="cart-item">
+                    <img src="${item.product?.image || 'https://via.placeholder.com/100'}" 
+                         alt="${item.product?.name}" 
+                         class="cart-item-image">
+                    
+                    <div class="cart-item-info">
+                        <h6 class="cart-item-title">${item.product?.name}</h6>
+                        <p class="cart-item-price">${formatPrice(item.product?.price || 0)}</p>
+                    </div>
+
+                    <div class="cart-item-quantity">
+                        <button class="cart-item-quantity-btn" onclick="updateQuantity('${item._id}', ${item.quantity - 1})">
+                            <i class="bi bi-dash"></i>
+                        </button>
+                        <span class="fw-bold">${item.quantity}</span>
+                        <button class="cart-item-quantity-btn" onclick="updateQuantity('${item._id}', ${item.quantity + 1})">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    </div>
+
+                    <div class="text-end">
+                        <p class="fw-bold mb-2">${formatPrice((item.product?.price || 0) * item.quantity)}</p>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removeItem('${item._id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Calculate total
+        function calculateTotal() {
+            const subtotal = cartItems.reduce((sum, item) => {
+                return sum + ((item.product?.price || 0) * item.quantity);
+            }, 0);
+
+            const shippingFee = 0; // Free shipping
+
+            document.getElementById('subtotal').textContent = formatPrice(subtotal);
+            document.getElementById('totalPrice').textContent = formatPrice(subtotal + shippingFee);
+        }
+
+        // Update quantity
+        async function updateQuantity(cartItemId, newQuantity) {
+            if (newQuantity < 1) {
+                await removeItem(cartItemId);
+                return;
+            }
+
+            try {
+                await CartAPI.updateCartItem(cartItemId, newQuantity);
+                await loadCart();
+            } catch (error) {
+                console.error('Update quantity error:', error);
+            }
+        }
+
+        // Remove item
+        async function removeItem(cartItemId) {
+            if (!confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+                return;
+            }
+
+            try {
+                await CartAPI.removeCartItem(cartItemId);
+                await loadCart();
+            } catch (error) {
+                console.error('Remove item error:', error);
+            }
+        }
+
+        // Checkout
+        async function checkout() {
+            if (cartItems.length === 0) {
+                showToast('Giỏ hàng trống', 'warning');
+                return;
+            }
+
+            if (!confirm('Xác nhận đặt hàng?')) {
+                return;
+            }
+
+            try {
+                document.getElementById('checkoutBtn').disabled = true;
+                document.getElementById('checkoutBtn').innerHTML = `
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Đang xử lý...
+                `;
+
+                const response = await OrderAPI.checkout();
+                
+                if (response.success) {
+                    showToast('Đặt hàng thành công!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/pages/user/orders.html';
+                    }, 1500);
+                }
+            } catch (error) {
+                console.error('Checkout error:', error);
+                document.getElementById('checkoutBtn').disabled = false;
+                document.getElementById('checkoutBtn').innerHTML = `
+                    <i class="bi bi-check-circle me-2"></i>
+                    Tiến hành thanh toán
+                `;
+            }
+        }
+
+        // Helper
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(price);
+        }
+    </script>
+</body>
+</html>
