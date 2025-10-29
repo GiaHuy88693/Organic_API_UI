@@ -314,7 +314,8 @@
 
       async function createMomoPayment(
         amount,
-        orderInfo = "Payment with MoMo"
+        orderInfo = "Payment with MoMo",
+        metadata = {}
       ) {
         const token =
           (window.Storage?.getToken && window.Storage.getToken()) ||
@@ -330,9 +331,11 @@
           "http://localhost:8080/api/v1";
 
         if (window.HttpClient?.post) {
+          // mở rộng payload: gửi kèm metadata nếu backend có đọc (không bắt buộc)
           return await window.HttpClient.post("/payments/momo/create", {
             amount,
             orderInfo,
+            metadata, // { orderId, name, phone } ...
           });
         }
 
@@ -343,7 +346,7 @@
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ amount, orderInfo }),
+          body: JSON.stringify({ amount, orderInfo, metadata }),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -361,7 +364,7 @@
           submitBtn.innerHTML =
             '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
 
-          // Lấy dữ liệu form
+          // 1) Lấy dữ liệu form
           const form = document.querySelector("form");
           const formData = new FormData(form);
           const name = formData.get("name")?.toString().trim();
@@ -375,7 +378,7 @@
             return;
           }
 
-          // === LẤY TOTAL TỪ FE ===
+          // 2) Lấy tổng tiền từ giỏ (phòng khi backend không trả total trong đơn)
           const cart = await window.CartService.get();
           let total = Number(cart?.total || 0);
           if ((!total || total === 0) && Array.isArray(cart?.items)) {
@@ -392,20 +395,46 @@
             return;
           }
 
-          // === GỌI API TẠO THANH TOÁN ===
-          const amountVND = Math.round(total);
-          const orderInfo = `Order by ${name} - ${phone}`;
-          const payment = await createMomoPayment(amountVND, orderInfo);
+          // 3) TẠO ĐƠN HÀNG từ giỏ (API bạn yêu cầu thêm)
+          //    -> đảm bảo order đã tồn tại trước khi đi MoMo
+          if (!window.OrderService?.checkoutFromCart) {
+            throw new Error("OrderService chưa sẵn sàng");
+          }
 
-          // === REDIRECT SANG TRANG THANH TOÁN ===
+          const order = await window.OrderService.checkoutFromCart();
+
+          // Lưu nhanh orderId để dùng sau khi quay lại từ cổng thanh toán (optional)
+          const orderId = order?.id || order?._id || order?.orderId;
+          if (orderId) {
+            sessionStorage.setItem("lastOrderId", String(orderId));
+          }
+
+          // 4) Xác định số tiền thanh toán:
+          //    ưu tiên dùng total từ order nếu có, fallback về total FE
+          const amountVND = Math.round(
+            Number(order?.grandTotal ?? order?.total ?? total)
+          );
+
+          // 5) Gọi API tạo phiên thanh toán MoMo
+          const orderCode = order?.code || order?.orderCode || orderId || "N/A";
+          const orderInfo = `Order ${orderCode} - ${name} - ${phone}`;
+
+          const payment = await createMomoPayment(amountVND, orderInfo, {
+            orderId,
+            name,
+            phone,
+            address,
+          });
+
+          // 6) Redirect sang trang thanh toán / mở deeplink / QR
           if (payment?.payUrl) {
-            window.location.href = payment.payUrl; // mở ngay trong tab hiện tại
+            window.location.href = payment.payUrl;
             return;
           } else if (payment?.deeplink || payment?.deepLink) {
             window.location.href = payment.deeplink || payment.deepLink;
             return;
           } else if (payment?.qrCodeUrl) {
-            // nếu chỉ có QR: mở tab mới/hiện modal tùy ý
+            // fallback: mở QR ở tab mới (hoặc bạn có thể gọi showMoMoQRModal để hiện modal)
             window.open(payment.qrCodeUrl, "_blank");
             return;
           } else {
@@ -417,7 +446,7 @@
             error.message || "Không thể đặt hàng. Vui lòng thử lại."
           );
         } finally {
-          // chỉ bật lại nút nếu chưa redirect
+          // Bật lại nút nếu chưa redirect
           if (!document.hidden) {
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;

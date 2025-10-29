@@ -516,6 +516,7 @@
 
       function renderProductCard(product) {
         const productId = product._id || product.id;
+        const imgs = normalizeImages(product.images);
 
         const primaryImage = product.images?.find((img) => img.isPrimary);
         let image = primaryImage?.url || product.images?.[0]?.url;
@@ -729,6 +730,29 @@
         await loadComponents();
         await loadProducts(1);
       })();
+
+      function buildImg(p) {
+        if (!p) return "";
+        const s = String(p).trim();
+        if (/^(https?:)?\/\//i.test(s) || s.startsWith("data:")) return s;
+        const base =
+          (window.API_CONFIG &&
+            (API_CONFIG.ASSET_BASE || API_CONFIG.BASE_URL)) ||
+          "";
+        const cleanedBase = base.replace(/\/+$/, "");
+        const cleanedPath = s.replace(/^\/+/, "");
+        return cleanedBase
+          ? `${cleanedBase}/${cleanedPath}`
+          : `/${cleanedPath}`;
+      }
+
+      function normalizeImages(arr) {
+        return (arr || [])
+          .map((im) =>
+            typeof im === "string" ? im : im?.url || im?.path || ""
+          )
+          .filter(Boolean);
+      }
     </script>
   </body>
 </html>
