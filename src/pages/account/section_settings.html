@@ -1,0 +1,503 @@
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+/>
+
+<!-- Toastify -->
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<div class="card p-4 mb-4">
+  <h5 class="fw-bold mb-3">Account Settings</h5>
+  <form class="row g-3 align-items-start" id="accountForm">
+    <div class="col-md-8">
+      <div class="mb-3">
+        <label class="form-label">First Name</label>
+        <input type="text" class="form-control" name="first_name" value="" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Last Name</label>
+        <input type="text" class="form-control" name="last_name" value="" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input
+          type="email"
+          class="form-control"
+          name="email"
+          value=""
+          readonly
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Phone</label>
+        <input type="text" class="form-control" name="phone" value="" />
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success px-4">Save Changes</button>
+        <button type="reset" class="btn btn-outline-secondary px-4">
+          Reset
+        </button>
+      </div>
+    </div>
+    <div class="col-md-4 text-center">
+      <img
+        id="previewAvatar"
+        src="https://randomuser.me/api/portraits/men/1.jpg"
+        alt="Avatar"
+        class="rounded-circle mb-3"
+        style="width: 130px; height: 130px; object-fit: cover"
+      />
+      <div class="d-grid">
+        <input
+          type="file"
+          class="form-control d-none"
+          id="avatar"
+          name="avatar"
+          accept="image/*"
+        />
+        <label for="avatar" class="btn btn-outline-success rounded-pill"
+          >Choose Image</label
+        >
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="card p-4 mb-4">
+  <h5 class="fw-bold mb-3">Billing Address</h5>
+  <form class="row g-3" id="billingForm">
+    <div class="col-md-4">
+      <label class="form-label">First Name</label>
+      <input
+        type="text"
+        class="form-control"
+        name="first_name"
+        value=""
+        readonly
+      />
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Last Name</label>
+      <input
+        type="text"
+        class="form-control"
+        name="last_name"
+        value=""
+        readonly
+      />
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Company (optional)</label>
+      <input type="text" class="form-control" name="company_name" value="" />
+    </div>
+    <div class="col-md-12">
+      <label class="form-label">Street Address</label>
+      <input
+        type="text"
+        class="form-control border-success"
+        name="street_address"
+        value=""
+      />
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Country</label>
+      <select name="country_id" id="countrySelect" class="form-select">
+        <option value="VN" selected>Vietnam</option>
+        <option value="US">United States</option>
+        <option value="JP">Japan</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">State</label>
+      <select name="state_id" id="stateSelect" class="form-select">
+        <option value="SG" selected>Ho Chi Minh</option>
+        <option value="HN">Ha Noi</option>
+        <option value="DN">Da Nang</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Zip Code</label>
+      <input type="text" class="form-control" name="zip_code" value="" />
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-control" name="email" value="" readonly />
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Phone</label>
+      <input type="text" class="form-control" name="phone" value="" readonly />
+    </div>
+    <div class="col-12">
+      <button type="submit" class="btn btn-success px-4">Save Changes</button>
+    </div>
+  </form>
+</div>
+
+<div class="card p-4 mb-4">
+  <h5 class="fw-bold mb-3">Secondary Address</h5>
+  <form class="row g-3" id="subAddressForm">
+    <div class="col-md-4">
+      <label class="form-label">First Name</label>
+      <input
+        type="text"
+        class="form-control"
+        name="first_name"
+        value=""
+        readonly
+      />
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Last Name</label>
+      <input
+        type="text"
+        class="form-control"
+        name="last_name"
+        value=""
+        readonly
+      />
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Company (optional)</label>
+      <input type="text" class="form-control" name="company_name" value="" />
+    </div>
+    <div class="col-md-12">
+      <label class="form-label">Street Address</label>
+      <input
+        type="text"
+        class="form-control border-success"
+        name="street_address"
+        value=""
+      />
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Country</label>
+      <select name="country_id" id="subCountrySelect" class="form-select">
+        <option value="VN" selected>Vietnam</option>
+        <option value="US">United States</option>
+        <option value="JP">Japan</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">State</label>
+      <select name="state_id" id="subStateSelect" class="form-select">
+        <option value="SG" selected>Ho Chi Minh</option>
+        <option value="HN">Ha Noi</option>
+        <option value="DN">Da Nang</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Zip Code</label>
+      <input type="text" class="form-control" name="zip_code" value="" />
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-control" name="email" value="" readonly />
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Phone</label>
+      <input type="text" class="form-control" name="phone" value="" readonly />
+    </div>
+    <div class="col-12">
+      <button type="submit" class="btn btn-outline-success px-4">
+        Save Changes
+      </button>
+    </div>
+  </form>
+</div>
+
+<div class="card p-4 mb-4">
+  <h5 class="fw-bold mb-3">Change Password</h5>
+  <form class="row g-3" id="changePasswordForm">
+    <div class="col-md-12">
+      <label class="form-label">Current Password</label>
+      <input
+        type="password"
+        class="form-control"
+        name="current_password"
+        placeholder="Current Password"
+      />
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">New Password</label>
+      <div class="input-group">
+        <input
+          type="password"
+          class="form-control"
+          name="new_password"
+          placeholder="New Password"
+        />
+        <span class="input-group-text"><i class="bi bi-eye"></i></span>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Confirm New Password</label>
+      <div class="input-group">
+        <input
+          type="password"
+          class="form-control"
+          name="confirm_password"
+          placeholder="Confirm New Password"
+        />
+        <span class="input-group-text"><i class="bi bi-eye"></i></span>
+      </div>
+    </div>
+    <div class="col-12">
+      <button type="submit" class="btn btn-success px-4">
+        Update Password
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- ✅ SCRIPT: Call API thật bằng AuthService (đã có trong trang host) -->
+<script>
+  // Fallback
+  const AuthService = window.AuthService || window.authService || {};
+
+  const toast = (msg, ok = true) =>
+    Toastify({
+      text: msg,
+      duration: 3000,
+      backgroundColor: ok ? "#28a745" : "#dc3545",
+    }).showToast();
+
+  const fillIf = (sel, val, ro = false) => {
+    const el = document.querySelector(sel);
+    if (!el) return;
+    el.value = val ?? "";
+    if (ro) el.setAttribute("readonly", "readonly");
+  };
+
+  // ====== Load Profile ======
+  async function loadUserProfile() {
+    try {
+      if (!AuthService.getProfile) return;
+      const res = await AuthService.getProfile();
+      if (!res?.success) {
+        if (res?.status === 401) {
+          toast("Vui lòng đăng nhập lại", false);
+          setTimeout(() => (location.href = "/src/pages/auth/login.html"), 800);
+        }
+        return;
+      }
+      const u = res.data || {};
+
+      // Map theo response bạn cung cấp
+      const email = u.email || "";
+      const phone = u.phoneNumber || u.phone || "";
+      const fullname = (u.fullname || "").trim();
+      const parts = fullname.split(/\s+/);
+      const firstName =
+        parts.length > 1 ? parts.slice(0, -1).join(" ") : fullname;
+      const lastName = parts.length > 1 ? parts[parts.length - 1] : "";
+
+      // Account
+      fillIf('input[name="first_name"]', firstName);
+      fillIf('input[name="last_name"]', lastName);
+      fillIf('input[name="email"]', email, true);
+      fillIf('input[name="phone"]', phone);
+
+      const avatar =
+        u.avatar ||
+        u.avatarUrl ||
+        "https://randomuser.me/api/portraits/men/1.jpg";
+      const img = document.getElementById("previewAvatar");
+      if (img) img.src = avatar;
+
+      // Billing (readonly)
+      fillIf('#billingForm input[name="first_name"]', firstName, true);
+      fillIf('#billingForm input[name="last_name"]', lastName, true);
+      fillIf('#billingForm input[name="email"]', email, true);
+      fillIf('#billingForm input[name="phone"]', phone, true);
+
+      // Secondary (readonly)
+      fillIf('#subAddressForm input[name="first_name"]', firstName, true);
+      fillIf('#subAddressForm input[name="last_name"]', lastName, true);
+      fillIf('#subAddressForm input[name="email"]', email, true);
+      fillIf('#subAddressForm input[name="phone"]', phone, true);
+    } catch (e) {
+      console.error("loadUserProfile error:", e);
+    }
+  }
+
+  // ====== Upload Avatar ======
+  document.getElementById("avatar")?.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    const preview = document.getElementById("previewAvatar");
+    if (!file) return;
+
+    if (file.type?.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (ev) => (preview.src = ev.target.result);
+      reader.readAsDataURL(file);
+
+      try {
+        if (!AuthService.uploadAvatar) return;
+        const res = await AuthService.uploadAvatar(file);
+        toast(
+          res?.success ? "Avatar uploaded!" : res?.message || "Upload failed!",
+          !!res?.success
+        );
+      } catch {
+        toast("Upload error!", false);
+      }
+    }
+  });
+
+  // ====== Save Account (PATCH profile) ======
+  document
+    .getElementById("accountForm")
+    ?.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const first = this.first_name.value.trim();
+      const last = this.last_name.value.trim();
+      const phone = this.phone.value.trim();
+      const payload = {
+        fullname: [first, last].filter(Boolean).join(" "),
+        phoneNumber: phone || null,
+      };
+      if (!AuthService.updateProfile) return;
+      const res = await AuthService.updateProfile(payload);
+      toast(
+        res?.success ? "Account updated!" : res?.message || "Update failed!",
+        !!res?.success
+      );
+      if (res?.success) window.applyAuthUI?.();
+    });
+
+  // ====== Billing / Secondary: tạm thời chỉ gửi fullname/phoneNumber để tránh 400 ======
+  document
+    .getElementById("billingForm")
+    ?.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const first = this.first_name.value.trim();
+      const last = this.last_name.value.trim();
+      const payload = { fullname: [first, last].filter(Boolean).join(" ") };
+      if (!AuthService.updateProfile) return;
+      const res = await AuthService.updateProfile(payload);
+      toast(
+        res?.success ? "Billing updated!" : res?.message || "Update failed!",
+        !!res?.success
+      );
+    });
+
+  document
+    .getElementById("subAddressForm")
+    ?.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const first = this.first_name.value.trim();
+      const last = this.last_name.value.trim();
+      const payload = { fullname: [first, last].filter(Boolean).join(" ") };
+      if (!AuthService.updateProfile) return;
+      const res = await AuthService.updateProfile(payload);
+      toast(
+        res?.success
+          ? "Secondary address updated!"
+          : res?.message || "Update failed!",
+        !!res?.success
+      );
+    });
+
+  // ====== Change Password ======
+  document
+    .getElementById("changePasswordForm")
+    ?.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const current = this.current_password.value;
+      const newPass = this.new_password.value;
+      const confirm = this.confirm_password.value;
+
+      if (!newPass || newPass !== confirm) {
+        toast("Passwords do not match!", false);
+        return;
+      }
+      if (!AuthService.changePassword) return;
+      const res = await AuthService.changePassword({
+        currentPassword: current,
+        newPassword: newPass,
+      });
+      toast(
+        res?.success ? "Password changed!" : res?.message || "Change failed!",
+        !!res?.success
+      );
+      if (res?.success) this.reset();
+    });
+
+  // Init
+  (function init() {
+    loadUserProfile();
+  })();
+</script>
+<script>
+  // ==== Local-only storage cho Billing & Secondary Address (ẩn hoàn toàn) ====
+  (function () {
+    const LS_KEYS = { billing: 'billingAddress', secondary: 'secondaryAddress' };
+
+    const serializeForm = (form) => {
+      const data = {};
+      new FormData(form).forEach((v, k) => (data[k] = v));
+      return data;
+    };
+
+    const fillForm = (form, data = {}) => {
+      if (!form) return;
+      Object.entries(data).forEach(([k, v]) => {
+        const el = form.querySelector(`[name="${k}"]`);
+        if (!el) return;
+        if (el.tagName === 'SELECT') {
+          // Nếu chưa có giá trị lưu, giữ nguyên option hiện tại
+          el.value = v ?? el.value;
+        } else {
+          el.value = v ?? '';
+        }
+      });
+    };
+
+    const saveToLS = (key, obj) => {
+      localStorage.setItem(key, JSON.stringify(obj || {}));
+    };
+
+    const readFromLS = (key) => {
+      try { return JSON.parse(localStorage.getItem(key) || '{}'); }
+      catch { return {}; }
+    };
+
+    const clearExistingSubmitHandlers = (form) => {
+      if (!form) return null;
+      // Clone & replace để gỡ toàn bộ listeners đã gắn trước đó
+      const clone = form.cloneNode(true);
+      form.replaceWith(clone);
+      return clone;
+    };
+
+    const init = () => {
+      // 1) Prefill từ localStorage (chạy sau khi loadUserProfile đã điền tên/email/phone)
+      const billingForm0 = document.getElementById('billingForm');
+      const subForm0 = document.getElementById('subAddressForm');
+
+      fillForm(billingForm0, readFromLS(LS_KEYS.billing));
+      fillForm(subForm0, readFromLS(LS_KEYS.secondary));
+
+      // 2) Gỡ các submit handler cũ (nếu có) rồi gắn handler mới (lưu local)
+      const billingForm = clearExistingSubmitHandlers(billingForm0);
+      const subForm = clearExistingSubmitHandlers(subForm0);
+
+      billingForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const data = serializeForm(billingForm);
+        saveToLS(LS_KEYS.billing, data);
+        toast('Billing address saved!');
+      });
+
+      subForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const data = serializeForm(subForm);
+        saveToLS(LS_KEYS.secondary, data);
+        toast('Secondary address saved!');
+      });
+    };
+
+    // Đợi 1 tick để script trước (loadUserProfile) điền xong, rồi mới lấp từ local
+    setTimeout(init, 0);
+  })();
+</script>

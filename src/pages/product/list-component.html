@@ -1,0 +1,466 @@
+<!-- Product List Component for Index Page -->
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Product List</h2>
+    <a
+      href="/src/pages/product/list.html"
+      class="text-success text-decoration-none"
+    >
+      Xem tất cả <i class="fas fa-arrow-right ms-2"></i>
+    </a>
+  </div>
+
+  <!-- Loading State -->
+  <div id="homeProductsLoading" class="text-center py-5">
+    <div class="spinner-border text-success" role="status">
+      <span class="visually-hidden">Đang tải...</span>
+    </div>
+  </div>
+
+  <!-- Products Grid -->
+  <div id="homeProductsGrid" style="display: none">
+    <div
+      class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4"
+      id="homeProductsContainer"
+    >
+      <!-- Products will be inserted here -->
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div id="homeProductsEmpty" class="text-center py-5" style="display: none">
+    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+    <p class="text-muted">Chưa có sản phẩm nào</p>
+  </div>
+</div>
+
+<style>
+  .product-card {
+    background: white;
+    border-radius: 0;
+    overflow: visible;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    height: 320px;
+    position: relative;
+    border: none;
+    outline: none;
+  }
+  .product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+  .product-card:focus,
+  .product-card:focus-visible {
+    outline: none;
+    border: none;
+  }
+  .col {
+    outline: none !important;
+    padding: 0 !important;
+  }
+  .row {
+    margin: 0 -8px !important;
+  }
+  .row > * {
+    padding: 0 8px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .product-card-image-wrapper {
+    position: relative;
+    height: 200px;
+    background: #ffffff;
+    overflow: visible;
+    margin: -8px -8px 0 -8px;
+    padding: 8px;
+  }
+  .product-card-image-wrapper a {
+    position: absolute;
+    inset: 0;
+    display: block;
+    z-index: 1;
+  }
+  .product-card-image-wrapper img {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    width: calc(100% + 12px) !important;
+    height: calc(100% + 12px) !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    transition: transform 0.3s ease;
+    display: block !important;
+  }
+
+  .product-card .sale-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: #ff4757;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    z-index: 10;
+  }
+
+  /* Wishlist button */
+  .product-card .wishlist-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  .product-card:hover .wishlist-btn {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .product-card .wishlist-btn:hover {
+    background: #ffecec;
+  }
+  .product-card .wishlist-btn.active {
+    background: #ff3b3b;
+    color: white;
+  }
+  .product-card .wishlist-btn i {
+    font-size: 16px;
+  }
+
+  .product-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    cursor: pointer;
+    display: block;
+  }
+
+  .product-card-body {
+    padding: 16px 12px 0px 3px;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .product-card-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .product-card-title a {
+    text-decoration: none;
+    color: inherit;
+  }
+  .product-card-title a:hover {
+    color: #3498db;
+  }
+
+  .product-card-price-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    justify-content: space-between;
+  }
+  .product-card-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2c3e50;
+  }
+
+  .product-card-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .product-card-rating .stars {
+    display: flex;
+    gap: 1px;
+    color: #ffd700;
+    font-size: 12px;
+  }
+  .product-card-rating span:last-child {
+    font-size: 11px;
+    color: #95a5a6;
+    margin-left: 4px;
+  }
+
+  .btn-add-cart {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #f5f5f5;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: background 0.2s;
+    position: absolute;
+    right: 16px;
+    bottom: 30px;
+    cursor: pointer;
+  }
+  .btn-add-cart:hover {
+    background: #38b000;
+    color: white;
+  }
+  .btn-add-cart i {
+    font-size: 20px;
+  }
+
+  /* Grid spacing */
+  .g-4 {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 1.5rem;
+  }
+</style>
+
+<script>
+  (function () {
+    // =========================
+    // Wishlist (API only)
+    // =========================
+    let wishlistSet = new Set();
+
+    function updateWishlistButtonUI(btn, isActive) {
+      btn.classList.toggle("active", isActive);
+      btn.title = isActive ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích";
+      const i = btn.querySelector("i");
+      if (!i) return;
+      i.className = isActive ? "fas fa-heart" : "far fa-heart";
+    }
+
+    function hydrateButtons() {
+      document
+        .querySelectorAll(
+          "#homeProductsContainer .wishlist-btn[data-product-id]"
+        )
+        .forEach((btn) => {
+          const pid = btn.getAttribute("data-product-id");
+          updateWishlistButtonUI(btn, wishlistSet.has(pid));
+        });
+    }
+
+    function syncWishlistButtons(productId) {
+      document
+        .querySelectorAll(
+          `#homeProductsContainer .wishlist-btn[data-product-id="${CSS.escape(
+            productId
+          )}"]`
+        )
+        .forEach((btn) =>
+          updateWishlistButtonUI(btn, wishlistSet.has(productId))
+        );
+    }
+
+    async function loadWishlistFromServer() {
+      try {
+        const res = await window.WishlistService.list({ page: 1, limit: 100 });
+        const items = res?.items || [];
+        wishlistSet = new Set(
+          items.map((it) => it.product?._id || it.product?.id || it.productId)
+        );
+        hydrateButtons();
+      } catch (err) {
+        console.warn("Không thể tải wishlist:", err.message || err);
+      }
+    }
+
+    async function toggleWishlist(productId) {
+      try {
+        await window.WishlistService.toggle(productId);
+        if (wishlistSet.has(productId)) {
+          wishlistSet.delete(productId);
+          window.Toast?.success?.("Đã xóa khỏi yêu thích");
+        } else {
+          wishlistSet.add(productId);
+          window.Toast?.success?.("Đã thêm vào yêu thích");
+        }
+        syncWishlistButtons(productId);
+      } catch (err) {
+        console.error("toggle wishlist error:", err);
+        window.Toast?.error?.(err?.message || "Không thể cập nhật yêu thích");
+      }
+    }
+
+    // =========================
+    // Render products
+    // =========================
+    function renderGrid(products) {
+      const container = document.getElementById("homeProductsContainer");
+      container.innerHTML = products
+        .map((product) => renderProductCard(product))
+        .join("");
+    }
+
+    function renderProductCard(product) {
+      const productId = product._id || product.id;
+      const primaryImage = product.images?.find((img) => img.isPrimary);
+      let image = primaryImage?.url || product.images?.[0]?.url;
+      if (!image)
+        image =
+          "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=300&fit=crop";
+
+      const price = new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(product.price || 0);
+
+      const discount = product.discount || 0;
+      const rating = 3 + Math.floor(Math.random() * 3);
+      const reviews = Math.floor(Math.random() * 500) + 50;
+      const isFav = wishlistSet.has(productId);
+
+      return `
+        <div class="col">
+          <div class="product-card">
+            <div class="product-card-image-wrapper">
+              ${
+                discount > 0
+                  ? `<span class="sale-badge">SALE ${discount}%</span>`
+                  : ""
+              }
+              <button
+                class="wishlist-btn ${isFav ? "active" : ""}"
+                type="button"
+                title="${isFav ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}"
+                data-product-id="${productId}"
+              >
+                <i class="${isFav ? "fas" : "far"} fa-heart"></i>
+              </button>
+              <a href="/src/pages/product/show.html?id=${productId}">
+                <img src="${image}" alt="${product.name}">
+              </a>
+            </div>
+            <div class="product-card-body">
+              <div class="product-card-title">
+                <a href="/src/pages/product/show.html?id=${productId}">
+                  ${product.name}
+                </a>
+              </div>
+              <div class="product-card-price-row">
+                <div class="product-card-price">${price}</div>
+                <button class="btn-add-cart" data-add-to-cart="${productId}" title="Thêm vào giỏ hàng">
+                  <i class="fas fa-shopping-bag"></i>
+                </button>
+              </div>
+              <div class="product-card-rating">
+                <span class="stars">${"★".repeat(rating)}${"☆".repeat(
+        5 - rating
+      )}</span>
+                <span>(${reviews})</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================
+    // Load home products
+    // =========================
+    async function loadHomeProducts() {
+      const loading = document.getElementById("homeProductsLoading");
+      const grid = document.getElementById("homeProductsGrid");
+      const empty = document.getElementById("homeProductsEmpty");
+
+      try {
+        if (!window.ProductService)
+          throw new Error("ProductService chưa được tải");
+
+        const response = await window.ProductService.list({
+          page: 1,
+          limit: 10,
+          includeDeleted: false,
+        });
+
+        const products = response.items || [];
+        if (products.length === 0) {
+          loading.style.display = "none";
+          empty.style.display = "block";
+          return;
+        }
+
+        renderGrid(products);
+
+        // Chỉ gọi API thật để lấy wishlist user hiện tại
+        await loadWishlistFromServer();
+
+        loading.style.display = "none";
+        grid.style.display = "block";
+      } catch (error) {
+        console.error("Error loading home products:", error);
+        loading.style.display = "none";
+        empty.style.display = "block";
+        empty.innerHTML = `
+          <i class="fas fa-exclamation-circle fa-3x text-danger mb-3"></i>
+          <p class="text-muted">Không thể tải sản phẩm: ${error.message}</p>
+        `;
+      }
+    }
+
+    // =========================
+    // Event delegation
+    // =========================
+    document.addEventListener("click", async (e) => {
+      const cartBtn = e.target.closest(".btn-add-cart[data-add-to-cart]");
+      if (cartBtn) {
+        const productId = cartBtn.getAttribute("data-add-to-cart");
+        try {
+          await window.CartService.add({ productId, quantity: 1 });
+          window.Toast?.success?.("Đã thêm vào giỏ hàng");
+        } catch (err) {
+          window.Toast?.error?.(err?.message || "Không thể thêm vào giỏ hàng");
+        }
+        return;
+      }
+
+      const heartBtn = e.target.closest("#homeProductsContainer .wishlist-btn");
+      if (!heartBtn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (heartBtn.dataset.loading === "1") return;
+      heartBtn.dataset.loading = "1";
+
+      const productId = heartBtn.getAttribute("data-product-id");
+      await toggleWishlist(productId);
+
+      heartBtn.dataset.loading = "0";
+    });
+
+    // =========================
+    // Boot
+    // =========================
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", loadHomeProducts);
+    } else {
+      loadHomeProducts();
+    }
+  })();
+</script>
+

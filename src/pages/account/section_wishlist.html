@@ -1,0 +1,296 @@
+<style>
+  .wishlist-table {
+    border-collapse: separate;
+    border-spacing: 0 12px;
+  }
+  .wishlist-table th {
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    border-bottom: 1px solid #eee;
+    background-color: #f9f9f9;
+  }
+  .wishlist-table td {
+    vertical-align: middle;
+    background-color: #fff;
+    border-top: none;
+    padding: 1rem;
+  }
+  .product-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-right: 14px;
+  }
+  .old-price {
+    text-decoration: line-through;
+    color: #bbb;
+    font-size: 14px;
+    margin-left: 8px;
+  }
+  .stock-in {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-block;
+    background-color: #d1f7d6;
+    color: #0f8d2c;
+  }
+  .add-btn {
+    background-color: #00b300;
+    color: #fff;
+    padding: 6px 20px;
+    border-radius: 999px;
+    font-size: 14px;
+    border: none;
+    font-weight: 500;
+    transition: background 0.3s;
+  }
+  .add-btn:hover {
+    background-color: #009900;
+  }
+  .remove-btn {
+    border: 1px solid #dc3545;
+    background-color: #fff;
+    color: #dc3545;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    transition: 0.3s;
+  }
+  .remove-btn:hover {
+    background-color: #dc3545;
+    color: #fff;
+  }
+  .social-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    color: #333;
+    background-color: #fff;
+    transition: all 0.3s;
+    font-size: 16px;
+    text-decoration: none;
+    margin-right: 10px;
+  }
+  .social-icon:hover {
+    background-color: #28a745;
+    color: #fff;
+    border-color: #28a745;
+  }
+</style>
+
+<main>
+  <div class="container" id="tab-wishlist">
+    <div class="table-responsive">
+      <table class="table wishlist-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Stock Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="wishlistTbody">
+          <!-- Rows will be rendered by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+  (function () {
+    // ===== State (API-only, no cache) =====
+    const WISHLIST_LIMIT = 100; // backend yêu cầu <= 100
+    let wishlistSet = new Set(); // chỉ giữ trong RAM, không lưu localStorage
+
+    // ===== Helpers =====
+    const VND = new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    });
+    const fmtPrice = (n) => VND.format(Number(n || 0));
+
+    function pickImage(product) {
+      const primary = product?.images?.find?.((i) => i.isPrimary)?.url;
+      const url = primary || product?.images?.[0]?.url;
+      if (url) return url;
+      const ph = [
+        "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=300&fit=crop",
+        "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=400&h=300&fit=crop",
+        "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=400&h=300&fit=crop",
+        "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop",
+        "https://images.unsplash.com/photo-1557800636-894a64c1696f?w=400&h=300&fit=crop",
+      ];
+      const name = product?.name || "";
+      const hash = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+      return ph[hash % ph.length];
+    }
+
+    function stockBadge(product) {
+      const inStock =
+        typeof product?.stock === "number"
+          ? product.stock > 0
+          : typeof product?.quantity === "number"
+          ? product.quantity > 0
+          : true;
+      return inStock
+        ? '<span class="stock-in">In Stock</span>'
+        : '<span class="text-danger">Out of Stock</span>';
+    }
+
+    function renderRow(item) {
+      const p = item.product || {};
+      const id = p._id || p.id || item.productId;
+      const img = pickImage(p);
+      const name = p.name || "Sản phẩm";
+      const link = `/src/pages/product/show.html?id=${id}`;
+      const hasDiscount = (p.discount || 0) > 0;
+      const price = Number(p.price || 0);
+      const finalPrice = hasDiscount ? price * (1 - p.discount / 100) : price;
+
+      return `
+        <tr data-row-product-id="${id}">
+          <td>
+            <div class="d-flex align-items-center">
+              <img src="${img}" class="product-img" alt="${name}"
+                   onerror="this.src='https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=600&h=600&fit=crop&crop=center'">
+              <a href="${link}" class="ms-2 text-decoration-none text-dark">${name}</a>
+            </div>
+          </td>
+          <td>
+            <strong>${fmtPrice(finalPrice)}</strong>
+            ${
+              hasDiscount
+                ? `<span class="old-price">${fmtPrice(price)}</span>`
+                : ""
+            }
+          </td>
+          <td>${stockBadge(p)}</td>
+          <td class="text-end">
+            <button class="add-btn" data-add-to-cart="${id}">Add to Cart</button>
+            <button class="remove-btn" data-remove="${id}" title="Remove"><i class="bi bi-x"></i></button>
+          </td>
+        </tr>
+      `;
+    }
+
+    function showEmptyState() {
+      document.getElementById(
+        "wishlistTbody"
+      ).innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">Danh sách yêu thích đang trống</td></tr>`;
+    }
+
+    // ===== API =====
+    async function loadWishlistTable() {
+      const tbody = document.getElementById("wishlistTbody");
+      try {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">Đang tải...</td></tr>`;
+
+        const res = await window.WishlistService.list({
+          page: 1,
+          limit: WISHLIST_LIMIT,
+        });
+        const items = res?.items || [];
+
+        // Build RAM set from API
+        wishlistSet = new Set(
+          items.map((it) => it.product?._id || it.product?.id || it.productId)
+        );
+
+        if (!items.length) {
+          showEmptyState();
+          return;
+        }
+
+        tbody.innerHTML = items.map(renderRow).join("");
+      } catch (err) {
+        console.error("Wishlist load error:", err);
+        // Thường là 401 (chưa đăng nhập) hoặc lỗi mạng → hiển thị rỗng
+        showEmptyState();
+      }
+    }
+
+    // ===== Actions (delegation) =====
+    document.addEventListener("click", async (e) => {
+      // Add to cart
+      const addBtn = e.target.closest("button[data-add-to-cart]");
+      if (addBtn) {
+        const productId = addBtn.getAttribute("data-add-to-cart");
+        try {
+          await window.CartService.add({ productId, quantity: 1 });
+          window.Toast?.success?.("Đã thêm vào giỏ hàng");
+        } catch (err) {
+          window.Toast?.error?.(err?.message || "Không thể thêm vào giỏ hàng");
+        }
+        return;
+      }
+
+      // Remove from wishlist
+      const removeBtn = e.target.closest("button[data-remove]");
+      if (removeBtn) {
+        const productId = removeBtn.getAttribute("data-remove");
+
+        if (removeBtn.dataset.loading === "1") return;
+        removeBtn.dataset.loading = "1";
+
+        try {
+          await window.WishlistService.toggle(productId); // backend sẽ xoá nếu đang có
+          wishlistSet.delete(productId);
+
+          // Xoá hàng trên bảng
+          const row = document.querySelector(
+            `tr[data-row-product-id="${CSS.escape(productId)}"]`
+          );
+          if (row) row.remove();
+
+          // Hết hàng → empty state
+          const tbody = document.getElementById("wishlistTbody");
+          if (!tbody.querySelector("tr")) showEmptyState();
+
+          window.Toast?.success?.("Đã xóa khỏi yêu thích");
+
+          // Đồng bộ trái tim ở các nơi khác (nếu có component sản phẩm)
+          document
+            .querySelectorAll(
+              `.wishlist-btn[data-product-id="${CSS.escape(productId)}"]`
+            )
+            .forEach((btn) => {
+              btn.classList.remove("active");
+              const i = btn.querySelector("i");
+              if (i) {
+                i.classList.add("far");
+                i.classList.remove("fas");
+                i.classList.add("fa-heart");
+              }
+              btn.title = "Thêm vào yêu thích";
+            });
+        } catch (err) {
+          console.error("Wishlist remove error:", err);
+          window.Toast?.error?.(err?.message || "Không thể xóa khỏi yêu thích");
+        } finally {
+          removeBtn.dataset.loading = "0";
+        }
+      }
+    });
+
+    // ===== Boot =====
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", loadWishlistTable);
+    } else {
+      loadWishlistTable();
+    }
+  })();
+</script>

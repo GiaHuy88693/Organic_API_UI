@@ -1,0 +1,221 @@
+<section class="py-5" style="background-color: #d1f5df">
+  <div class="container">
+    <div class="row g-4">
+      <!-- Banner lớn bên trái (luôn hiển thị) -->
+      <div class="col-lg-8 col-12">
+        <div
+          class="position-relative rounded-4 overflow-hidden shadow w-100"
+          style="height: 500px"
+        >
+          <img
+            src="https://i.postimg.cc/gcVXW8ys/0c993fa1e3446b7d29575d3d991b00a479103bab.jpg"
+            alt="Main Banner"
+            class="w-100 h-100 object-fit-cover position-absolute top-0 start-0"
+          />
+
+          <!-- Gradient overlay bên trái -->
+          <div
+            class="position-absolute top-0 start-0 w-100 h-100"
+            style="
+              background: linear-gradient(
+                to right,
+                rgba(0, 0, 0, 0.65),
+                rgba(0, 0, 0, 0.1) 60%,
+                rgba(0, 0, 0, 0)
+              );
+              z-index: 1;
+            "
+          ></div>
+
+          <!-- Nội dung -->
+          <div
+            class="position-relative text-white p-4 p-md-5 h-100 d-flex flex-column justify-content-center"
+            style="z-index: 2"
+          >
+            <h2 class="fw-bold display-6 mb-3">
+              Thực phẩm hữu cơ tươi ngon mỗi ngày
+            </h2>
+            <div class="d-flex align-items-center mb-2">
+              <span class="me-2 fs-6">Giảm giá đặc biệt</span>
+              <span class="badge bg-warning text-dark px-3 py-2">30% OFF</span>
+            </div>
+            <p class="mb-3 fs-6">
+              Miễn phí vận chuyển cho đơn hàng từ 500.000đ
+            </p>
+            <a
+              href="#"
+              class="btn btn-success rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center"
+              style="width: fit-content;"
+            >
+              Mua ngay <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2 banner nhỏ bên phải (chỉ hiển thị trên desktop) -->
+      <div class="col-lg-4 d-none d-lg-flex flex-column gap-4">
+        <!-- Top small banner -->
+        <div
+          class="rounded-4 overflow-hidden shadow w-100 position-relative"
+          style="height: 240px"
+        >
+          <img
+            src="https://i.postimg.cc/mkKB9dCJ/1a38ed3e9aabb671cc35be935fcff80a3b3c0f69.jpg"
+            alt="Summer Sale"
+            class="w-100 h-100 object-fit-cover position-absolute top-0 start-0"
+          />
+          <div
+            class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"
+          ></div>
+          <div
+            class="position-relative p-4 h-100 d-flex flex-column justify-content-center text-white"
+          >
+            <p class="text-uppercase small text-white-50 mb-1">Ưu đãi mùa hè</p>
+            <h5 class="fw-bold mb-1">75% OFF</h5>
+            <p class="mb-2">Giảm giá cực sốc cho các sản phẩm trái cây tươi.</p>
+            <a
+              href="#"
+              class="text-success fw-semibold text-decoration-none d-inline-flex align-items-center"
+            >
+              Mua ngay <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Bottom small banner -->
+        <div
+          class="rounded-4 overflow-hidden shadow w-100 position-relative"
+          style="height: 240px"
+        >
+          <img
+            src="https://i.postimg.cc/QtM43hwk/a4634113f6d6a27ca8a91430a85ffc7700edf9ab.jpg"
+            alt="Deal of the Month"
+            class="w-100 h-100 object-fit-cover position-absolute top-0 start-0"
+          />
+          <div
+            class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-75"
+          ></div>
+          <div
+            class="position-relative p-4 h-100 d-flex flex-column justify-content-center text-white"
+          >
+            <p class="text-uppercase small text-white-50 mb-1">
+              Ưu đãi tháng này
+            </p>
+            <h5 class="fw-bold mb-3">Mua 1 tặng 1 cho sản phẩm làm đẹp</h5>
+            <a
+              href="#"
+              class="text-success fw-semibold text-decoration-none d-inline-flex align-items-center"
+            >
+              Mua ngay <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service desktop: grid 4 cột -->
+    <div class="row text-center mt-5 g-4 d-none d-lg-flex">
+      <div class="col-md-3">
+        <div class="p-3 bg-white rounded-4 shadow h-100">
+          <i class="bi bi-truck fs-2 text-success mb-2"></i>
+          <h6 class="fw-bold">Giao hàng nhanh</h6>
+          <p class="text-muted small">Giao hàng tận nơi trên toàn quốc.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="p-3 bg-white rounded-4 shadow h-100">
+          <i class="bi bi-headset fs-2 text-success mb-2"></i>
+          <h6 class="fw-bold">Hỗ trợ 24/7</h6>
+          <p class="text-muted small">Tư vấn và hỗ trợ khách hàng mọi lúc.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="p-3 bg-white rounded-4 shadow h-100">
+          <i class="bi bi-shield-check fs-2 text-success mb-2"></i>
+          <h6 class="fw-bold">Thanh toán an toàn</h6>
+          <p class="text-muted small">
+            Bảo mật thông tin và thanh toán tiện lợi.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="p-3 bg-white rounded-4 shadow h-100">
+          <i class="bi bi-box-seam fs-2 text-success mb-2"></i>
+          <h6 class="fw-bold">Đổi trả dễ dàng</h6>
+          <p class="text-muted small">
+            Chính sách đổi trả linh hoạt trong 7 ngày.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service mobile: carousel -->
+    <div
+      id="serviceCarousel"
+      class="carousel slide d-lg-none mt-5"
+      data-bs-ride="carousel"
+    >
+      <div class="carousel-inner text-center">
+        <div class="carousel-item active">
+          <div class="p-4 bg-white rounded-4 shadow mx-4">
+            <i class="bi bi-truck fs-2 text-success mb-2"></i>
+            <h6 class="fw-bold">Giao hàng nhanh</h6>
+            <p class="text-muted small">Giao hàng tận nơi trên toàn quốc.</p>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="p-4 bg-white rounded-4 shadow mx-4">
+            <i class="bi bi-headset fs-2 text-success mb-2"></i>
+            <h6 class="fw-bold">Hỗ trợ 24/7</h6>
+            <p class="text-muted small">Tư vấn và hỗ trợ khách hàng mọi lúc.</p>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="p-4 bg-white rounded-4 shadow mx-4">
+            <i class="bi bi-shield-check fs-2 text-success mb-2"></i>
+            <h6 class="fw-bold">Thanh toán an toàn</h6>
+            <p class="text-muted small">
+              Bảo mật thông tin và thanh toán tiện lợi.
+            </p>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="p-4 bg-white rounded-4 shadow mx-4">
+            <i class="bi bi-box-seam fs-2 text-success mb-2"></i>
+            <h6 class="fw-bold">Đổi trả dễ dàng</h6>
+            <p class="text-muted small">
+              Chính sách đổi trả linh hoạt trong 7 ngày.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls: ẩn dưới 576px -->
+      <button
+        class="carousel-control-prev d-none d-sm-flex"
+        type="button"
+        data-bs-target="#serviceCarousel"
+        data-bs-slide="prev"
+      >
+        <span
+          class="carousel-control-prev-icon bg-success rounded-circle p-2"
+          aria-hidden="true"
+        ></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button
+        class="carousel-control-next d-none d-sm-flex"
+        type="button"
+        data-bs-target="#serviceCarousel"
+        data-bs-slide="next"
+      >
+        <span
+          class="carousel-control-next-icon bg-success rounded-circle p-2"
+          aria-hidden="true"
+        ></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+  </div>
+</section>

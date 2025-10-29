@@ -1,0 +1,372 @@
+<!-- section_dashboard.html -->
+<div class="row g-3 mb-4" id="dashboardSection">
+  <!-- User Card -->
+  <div class="col-md-6">
+    <div class="card h-100 text-center p-4">
+      <img
+        id="dbAvatar"
+        src="https://randomuser.me/api/portraits/men/1.jpg"
+        alt="Avatar"
+        class="rounded-circle mx-auto mb-3"
+        style="width: 100px; height: 100px; object-fit: cover"
+      />
+      <h5 class="mb-1" id="dbEmail">user@example.com</h5>
+      <p class="text-muted small" id="dbRole">User</p>
+      <a href="#" class="text-success fw-semibold" data-goto-settings
+        >Edit Profile</a
+      >
+    </div>
+  </div>
+
+  <!-- Billing Address -->
+  <div class="col-md-6 d-flex">
+    <div
+      class="card h-100 p-4 w-100 d-flex flex-column justify-content-between"
+    >
+      <div>
+        <h6 class="text-uppercase text-muted fw-bold mb-2 small">
+          Billing Address
+        </h6>
+        <p class="mb-1 fw-semibold" id="addrName">—</p>
+        <p class="mb-1 text-muted small" id="addrLine">—</p>
+        <p class="mb-1 text-muted small" id="addrCityZip">—</p>
+        <p class="mb-1 text-muted small" id="addrEmail">—</p>
+        <p class="mb-0 text-muted small" id="addrPhone">—</p>
+      </div>
+      <a href="#" class="text-success fw-semibold" data-goto-settings
+        >Edit Address</a
+      >
+    </div>
+  </div>
+</div>
+
+<!-- Recent orders (dashboard-only) -->
+<div class="db-orders">
+  <h2 class="db-orders__title">Recent Order History</h2>
+
+  <div id="dbRecentLoading" class="db-orders__loading" style="display: none">
+    <i class="fa-solid fa-spinner fa-spin"></i> Loading orders...
+  </div>
+
+  <div id="dbRecentEmpty" class="db-orders__empty" style="display: none">
+    <i class="fa-regular fa-face-smile"></i> You have no orders yet.
+  </div>
+
+  <table class="db-orders__table" id="dbRecentTable" style="display: none">
+    <thead>
+      <tr>
+        <th>Order ID</th>
+        <th>Date</th>
+        <th>Total</th>
+        <th>Quantity</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="dbRecentTbody"></tbody>
+  </table>
+</div>
+
+<style>
+  /* chỉ style dashboard recent; không đụng class global */
+  .db-orders {
+    max-width: 1000px;
+    padding: 0 1rem;
+  }
+  .db-orders__title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 1.5rem 0;
+  }
+  .db-orders__table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  }
+  .db-orders__table th,
+  .db-orders__table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+  }
+  .db-orders__table th {
+    background: #f9f9f9;
+    font-weight: 600;
+    color: #555;
+  }
+  .db-orders__table td strong {
+    color: #198754;
+  }
+  .db-orders .status {
+    text-transform: capitalize;
+  }
+  .db-orders .view-link {
+    color: #198754;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .db-orders .view-link:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<script>
+  (function () {
+    "use strict";
+
+    /* ===== User card (giữ nguyên, không export) ===== */
+    function decodeJwtToken(token) {
+      try {
+        const payloadPart = token.split(".")[1];
+        const json = atob(payloadPart.replace(/-/g, "+").replace(/_/g, "/"));
+        return JSON.parse(decodeURIComponent(escape(json)));
+      } catch {
+        return null;
+      }
+    }
+    function getAccessToken() {
+      return (
+        localStorage.getItem("access_token") ||
+        localStorage.getItem("accessToken") ||
+        null
+      );
+    }
+    function getUserFromStorageOrToken() {
+      const u = window.Storage?.getUser?.();
+      if (u && (u._id || u.id)) return u;
+      const token = getAccessToken();
+      if (!token) return null;
+      const payload = decodeJwtToken(token);
+      if (!payload) return null;
+      return {
+        _id: payload.userId || payload.sub || payload.id || payload._id || null,
+        email: payload.email || "",
+        role: payload.role || "User",
+        name: payload.name || payload.fullName || "",
+        avatar: payload.avatar || payload.picture || "",
+      };
+    }
+    const pick = (vals) => vals.find(Boolean);
+    function resolveMeUrl() {
+      return pick([
+        window.API?.AUTH?.GET_PROFILE,
+        window.API?.AUTH?.PROFILE,
+        "/auth/profile",
+      ]);
+    }
+    async function loadUserCard() {
+      const emailEl = document.getElementById("dbEmail");
+      const roleEl = document.getElementById("dbRole");
+      const avEl = document.getElementById("dbAvatar");
+
+      const addrName = document.getElementById("addrName");
+      const addrLine = document.getElementById("addrLine");
+      const addrCityZip = document.getElementById("addrCityZip");
+      const addrEmail = document.getElementById("addrEmail");
+      const addrPhone = document.getElementById("addrPhone");
+
+      const cached = getUserFromStorageOrToken();
+      if (cached) {
+        emailEl.textContent = cached.email || "—";
+        roleEl.textContent = cached.role || "User";
+        if (cached.avatar) avEl.src = cached.avatar;
+        addrName.textContent = cached.name || cached.email || "—";
+        addrEmail.textContent = cached.email || "—";
+      }
+      try {
+        const meUrl = resolveMeUrl();
+        const res = await window.HttpClient.request(meUrl, {
+          method: "GET",
+          withAuth: true,
+        });
+        if (!res?.ok) throw new Error(res?.message || "Cannot load profile");
+        const me = res.data || res;
+
+        const email = me.email || cached?.email || "—";
+        const role = me.role || cached?.role || "User";
+        const avatar = me.avatar || me.picture || cached?.avatar;
+        const fullName = me.fullName || me.name || email;
+
+        emailEl.textContent = email;
+        roleEl.textContent = role;
+        if (avatar) avEl.src = avatar;
+
+        const addr = me.address || me.billingAddress || me.defaultAddress || {};
+        addrName.textContent = addr.name || fullName || email;
+        addrLine.textContent =
+          [addr.addressLine, addr.address, addr.street]
+            .filter(Boolean)
+            .join(", ") || "—";
+        const city = [addr.postalCode, addr.zip, addr.areaCode]
+          .filter(Boolean)
+          .join("");
+        const region = [addr.city, addr.district, addr.state, addr.province]
+          .filter(Boolean)
+          .join(", ");
+        const country = addr.country || "Vietnam";
+        addrCityZip.textContent =
+          [city, region, country].filter(Boolean).join(", ") || "—";
+        addrEmail.textContent = email || "—";
+        addrPhone.textContent = addr.phone || me.phone || "—";
+      } catch {}
+    }
+
+    /* ===== Dashboard Recent Orders (LIMIT=5, tách biệt) ===== */
+    const LIMIT = 5;
+    const $tbody = document.getElementById("dbRecentTbody");
+    const $tbl = document.getElementById("dbRecentTable");
+    const $empty = document.getElementById("dbRecentEmpty");
+    const $loading = document.getElementById("dbRecentLoading");
+
+    const fmtMoney = (n) =>
+      new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+        maximumFractionDigits: 0,
+      }).format(Number(n || 0));
+    const fmtDate = (d) => {
+      try {
+        return new Date(d).toLocaleDateString("vi-VN");
+      } catch {
+        return d || "";
+      }
+    };
+    const normMsg = (m) =>
+      m?.message ||
+      (Array.isArray(m)
+        ? m.map((x) => x?.message || x).join(", ")
+        : typeof m === "object"
+        ? JSON.stringify(m)
+        : String(m || ""));
+
+    function resolveOrdersUrl(p) {
+      const base =
+        window.API?.ORDER?.GET_LIST ||
+        window.API?.ORDERS?.GET_LIST ||
+        window.API?.ORDER?.PAGINATION ||
+        window.API?.ORDERS?.PAGINATION ||
+        window.API?.ORDER?.LIST_MINE ||
+        window.API?.ORDERS?.LIST_MINE ||
+        window.API?.ORDER?.LIST ||
+        window.API?.ORDERS?.LIST ||
+        "/order/pagination";
+      const qs = new URLSearchParams(
+        Object.fromEntries(Object.entries(p || {}).filter(([, v]) => v != null))
+      ).toString();
+      return qs ? `${base}?${qs}` : base;
+    }
+
+    async function fetchOrders(limit) {
+      if (window.OrderService?.listMine) {
+        const r = await window.OrderService.listMine({
+          page: "1",
+          limit: String(limit),
+        });
+        return r?.items || r?.data || [];
+      }
+      if (window.OrderService?.list) {
+        const r = await window.OrderService.list({
+          page: "1",
+          limit: String(limit),
+          mine: true,
+        });
+        return r?.items || r?.data || [];
+      }
+      const url = resolveOrdersUrl({ page: "1", limit: String(limit) });
+      const res = await window.HttpClient.request(url, {
+        method: "GET",
+        withAuth: true,
+      });
+      if (!res?.ok)
+        throw new Error(normMsg(res?.message) || "Không thể tải đơn hàng");
+      const payload = res.data ?? res;
+      return payload?.items || payload?.data || payload || [];
+    }
+
+    const getId = (o) => o._id || o.id || o.orderId || o.code || "";
+    const getTotal = (o) =>
+      o.totalAmount ?? o.totalPrice ?? o.total ?? o.amount ?? o.grandTotal ?? 0;
+    const getQty = (o) =>
+      typeof o.totalQuantity === "number"
+        ? o.totalQuantity
+        : Array.isArray(o.items)
+        ? o.items.reduce((a, it) => a + Number(it.quantity ?? it.qty ?? 0), 0)
+        : Array.isArray(o.products)
+        ? o.products.length
+        : Number(o.quantity || 0);
+    const getStatus = (o) =>
+      (o.status || o.state || o.orderStatus || "pending") + "";
+    const getDate = (o) =>
+      fmtDate(
+        o.createdAt || o.created_at || o.date || o.placedAt || Date.now()
+      );
+    const detailHref = (o) =>
+      `/src/pages/account/order-detail.html?id=${encodeURIComponent(getId(o))}`;
+
+    function row(o) {
+      const id = String(getId(o));
+      const qty = getQty(o) || 0;
+      return `<tr>
+        <td>#${id.slice(-6)}</td>
+        <td>${getDate(o)}</td>
+        <td><strong>${fmtMoney(getTotal(o))}</strong></td>
+        <td>${qty} ${qty === 1 ? "Product" : "Products"}</td>
+        <td class="status">${getStatus(o).toLowerCase()}</td>
+        <td><a class="view-link" href="${detailHref(
+          o
+        )}" title="View detail"><i class="fas fa-eye"></i></a></td>
+      </tr>`;
+    }
+
+    async function loadDbRecent() {
+      try {
+        $loading.style.display = "block";
+        $empty.style.display = "none";
+        $tbl.style.display = "none";
+
+        const token = getAccessToken();
+        if (!token) {
+          $empty.style.display = "block";
+          return;
+        }
+
+        const orders = await fetchOrders(LIMIT);
+        if (!orders.length) {
+          $empty.style.display = "block";
+          return;
+        }
+
+        $tbody.innerHTML = orders.map(row).join("");
+        $tbl.style.display = "";
+      } catch (err) {
+        console.error("Dashboard recent orders error:", err);
+        $empty.style.display = "block";
+        window.Toast?.error?.(err.message || "Không thể tải đơn hàng");
+      } finally {
+        $loading.style.display = "none";
+      }
+    }
+
+    /* boot */
+    document.addEventListener("click", (e) => {
+      const link = e.target.closest("[data-goto-settings]");
+      if (!link) return;
+      e.preventDefault();
+      window.location.href = "/src/pages/account/settings.html";
+    });
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        loadUserCard();
+        loadDbRecent();
+      });
+    } else {
+      loadUserCard();
+      loadDbRecent();
+    }
+  })();
+</script>

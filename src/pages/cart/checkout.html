@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout - Organic Store</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      .address-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 16px;
+        background: #fff;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+      }
+      .address-card.selected {
+        border-color: #b6eac7;
+        background: #eafaf1;
+      }
+      .address-radio {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="header"></div>
+
+    <style>
+      body {
+        font-family: "Poppins", Arial, Helvetica, sans-serif !important;
+        background-color: #f1f3f5;
+      }
+      .checkout-page {
+        max-width: 1200px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+      }
+      .checkout-left,
+      .checkout-right {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+      .checkout-right {
+        position: sticky;
+        top: 20px;
+      }
+      h2.section-title {
+        font-weight: 700;
+        font-size: 1.4rem;
+        margin-bottom: 1.2rem;
+      }
+      .form-label {
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+      }
+      .form-control,
+      .form-select {
+        border-radius: 8px;
+        border: 1.5px solid #ced4da !important;
+        transition: border 0.3s ease, box-shadow 0.3s ease;
+        background-color: #fff !important;
+      }
+      .form-control:focus,
+      .form-select:focus {
+        border-color: #198754 !important;
+        box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25) !important;
+      }
+      .form-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 0.75rem center !important;
+        background-size: 16px 12px !important;
+        padding-right: 2.5rem !important;
+      }
+      .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        font-size: 14px;
+      }
+      .summary-item.total {
+        font-weight: 700;
+        font-size: 1.2rem;
+        border-top: 1px solid #ccc;
+        margin-top: 1rem;
+        padding-top: 1rem;
+      }
+      .checkout-btn {
+        border-radius: 999px;
+        padding: 0.6rem 1.8rem;
+        background-color: #198754;
+        color: white;
+        border: none;
+        font-weight: 600;
+      }
+      .checkout-btn:hover {
+        background-color: #157347;
+      }
+      .back-link {
+        font-size: 14px;
+        text-decoration: underline;
+      }
+      .address-card {
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      input[name="address_id"]:checked + .address-card {
+        border: 2px solid #198754;
+        background-color: #e9f7ef;
+      }
+    </style>
+
+    <div class="container checkout-page">
+      <div class="row g-4">
+        <!-- Left Column - Shipping Details -->
+        <div class="col-lg-7">
+          <div class="checkout-left">
+            <h2 class="section-title">Shipping Details</h2>
+            <form method="POST" action="#" novalidate>
+              <div class="mb-3">
+                <label class="form-label"
+                  >Full Name <span class="text-danger">*</span></label
+                >
+                <input
+                  type="text"
+                  name="name"
+                  class="form-control"
+                  placeholder="Nhập tên giùm tao"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label"
+                  >Phone Number <span class="text-danger">*</span></label
+                >
+                <input
+                  type="tel"
+                  name="phone"
+                  class="form-control"
+                  placeholder="01111111"
+                  required
+                />
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label"
+                  >Select Shipping Address
+                  <span class="text-danger">*</span></label
+                >
+                <select class="form-select" name="address" required>
+                  <option value="">Choose an address...</option>
+                  <option value="123 33333 33 3 3, Vũ Trung deptraivc">
+                    123 33333 33 3 3, Vũ Trung deptraivc
+                  </option>
+                  <option value="456 88888 88 8 8, Huy">
+                    456 88888 88 8 8, Huy
+                  </option>
+                  <option value="789 55555 55 5 5, Quốc">
+                    789 55555 55 5 5, Quốc
+                  </option>
+                </select>
+              </div>
+
+              <div
+                class="mt-4 d-flex justify-content-between align-items-center"
+              >
+                <a
+                  href="/src/pages/cart/cart.html"
+                  class="back-link"
+                  style="text-decoration: none; color: #198754"
+                  >← Back to Cart</a
+                >
+                <button type="submit" class="checkout-btn">
+                  Confirm & Pay
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Right Column - Summary -->
+        <div class="col-lg-5">
+          <div class="checkout-right">
+            <h2 class="section-title">Summary</h2>
+            <div id="cart-summary-items">
+              <!-- Cart items will be loaded here -->
+            </div>
+            <div class="summary-item">
+              <div>Shipping</div>
+              <div id="shipping-fee">0đ</div>
+            </div>
+            <div class="summary-item total">
+              <div>Total</div>
+              <div id="total-amount">0đ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="footer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/toastify-js"
+    ></script>
+    <script src="/src/js/utils/toast.js"></script>
+    <script src="/src/js/utils/storage.js"></script>
+    <script src="/src/js/utils/auth.guard.js"></script>
+    <script type="module" src="/src/js/config/api.config.js"></script>
+    <script type="module" src="/src/js/utils/http.client.js"></script>
+    <script type="module" src="/src/js/services/cart.service.js"></script>
+    <script type="module" src="/src/js/services/order.service.js"></script>
+
+    <script type="module">
+      // Load header và footer
+      async function loadHeaderFooter() {
+        try {
+          console.log("Loading header and footer...");
+          const [headerHtml, footerHtml] = await Promise.all([
+            fetch("/src/header.html").then((res) => {
+              console.log("Header response:", res.status);
+              return res.text();
+            }),
+            fetch("/src/footer.html").then((res) => {
+              console.log("Footer response:", res.status);
+              return res.text();
+            }),
+          ]);
+
+          console.log("Header HTML loaded, length:", headerHtml.length);
+          console.log("Footer HTML loaded, length:", footerHtml.length);
+
+          document.getElementById("header").innerHTML = headerHtml;
+          document.getElementById("footer").innerHTML = footerHtml;
+
+          console.log("Header and footer injected into DOM");
+
+          execScriptsIn(document.getElementById("header"));
+          execScriptsIn(document.getElementById("footer"));
+
+          // Fix dropdown
+          setTimeout(() => {
+            const userDropdown = document.getElementById("userDropdown");
+            if (userDropdown) {
+              userDropdown.addEventListener("click", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const dropdownInstance =
+                  bootstrap.Dropdown.getOrCreateInstance(userDropdown);
+                dropdownInstance.toggle();
+              });
+            }
+          }, 100);
+        } catch (error) {
+          console.error("Error loading header/footer:", error);
+        }
+      }
+
+      function execScriptsIn(container) {
+        if (!container) return;
+        const scripts = Array.from(container.querySelectorAll("script"));
+        scripts.forEach((oldScript) => {
+          const newScript = document.createElement("script");
+          if (oldScript.src) newScript.src = oldScript.src;
+          else newScript.textContent = oldScript.textContent;
+          oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
+      }
+
+      // Form validation
+      (() => {
+        "use strict";
+        const forms = document.querySelectorAll("form");
+        Array.from(forms).forEach((form) => {
+          form.addEventListener(
+            "submit",
+            async (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+
+              if (form.checkValidity()) {
+                await handleCheckout();
+              }
+
+              form.classList.add("was-validated");
+            },
+            false
+          );
+        });
+      })();
+
+      async function createMomoPayment(
+        amount,
+        orderInfo = "Payment with MoMo"
+      ) {
+        const token =
+          (window.Storage?.getToken && window.Storage.getToken()) ||
+          localStorage.getItem("access_token") ||
+          localStorage.getItem("accessToken") ||
+          sessionStorage.getItem("access_token") ||
+          "";
+
+        if (!token) throw new Error("Chưa đăng nhập hoặc thiếu token");
+
+        const BASE =
+          (window.API_CONFIG && window.API_CONFIG.baseURL) ||
+          "http://localhost:8080/api/v1";
+
+        if (window.HttpClient?.post) {
+          return await window.HttpClient.post("/payments/momo/create", {
+            amount,
+            orderInfo,
+          });
+        }
+
+        const endpoint = `${BASE.replace(/\/+$/, "")}/payments/momo/create`;
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ amount, orderInfo }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || `HTTP ${res.status}`);
+        }
+        return res.json();
+      }
+
+      async function handleCheckout() {
+        const submitBtn = document.querySelector(".checkout-btn");
+        const originalText = submitBtn.innerHTML;
+
+        try {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
+
+          // Lấy dữ liệu form
+          const form = document.querySelector("form");
+          const formData = new FormData(form);
+          const name = formData.get("name")?.toString().trim();
+          const phone = formData.get("phone")?.toString().trim();
+          const address = formData.get("address")?.toString().trim();
+
+          if (!name || !phone || !address) {
+            window.Toast?.error?.("Vui lòng điền đầy đủ thông tin");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            return;
+          }
+
+          // === LẤY TOTAL TỪ FE ===
+          const cart = await window.CartService.get();
+          let total = Number(cart?.total || 0);
+          if ((!total || total === 0) && Array.isArray(cart?.items)) {
+            total = cart.items.reduce((sum, item) => {
+              const price = Number(item.price ?? item.product?.price ?? 0);
+              const qty = Number(item.quantity ?? 0);
+              return sum + price * qty;
+            }, 0);
+          }
+          if (!total || total <= 0) {
+            window.Toast?.error?.("Giỏ hàng trống hoặc không có giá trị");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            return;
+          }
+
+          // === GỌI API TẠO THANH TOÁN ===
+          const amountVND = Math.round(total);
+          const orderInfo = `Order by ${name} - ${phone}`;
+          const payment = await createMomoPayment(amountVND, orderInfo);
+
+          // === REDIRECT SANG TRANG THANH TOÁN ===
+          if (payment?.payUrl) {
+            window.location.href = payment.payUrl; // mở ngay trong tab hiện tại
+            return;
+          } else if (payment?.deeplink || payment?.deepLink) {
+            window.location.href = payment.deeplink || payment.deepLink;
+            return;
+          } else if (payment?.qrCodeUrl) {
+            // nếu chỉ có QR: mở tab mới/hiện modal tùy ý
+            window.open(payment.qrCodeUrl, "_blank");
+            return;
+          } else {
+            window.Toast?.error?.("Thiếu thông tin thanh toán MoMo");
+          }
+        } catch (error) {
+          console.error("Checkout error:", error);
+          window.Toast?.error?.(
+            error.message || "Không thể đặt hàng. Vui lòng thử lại."
+          );
+        } finally {
+          // chỉ bật lại nút nếu chưa redirect
+          if (!document.hidden) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+          }
+        }
+      }
+
+      function showMoMoQRModal(paymentData, shippingInfo) {
+        const qrCodeUrl = paymentData.qrCodeUrl || paymentData.payUrl;
+        const deepLink = paymentData.deeplink || paymentData.deepLink;
+
+        // Create modal HTML
+        const modalHTML = `
+      <div class="modal fade" id="momoQRModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Thanh toán MoMo</h5>
+            </div>
+            <div class="modal-body text-center">
+              <p class="mb-3">Quét mã QR bằng ứng dụng MoMo để thanh toán</p>
+              ${
+                qrCodeUrl
+                  ? `<img src="${qrCodeUrl}" alt="MoMo QR Code" style="max-width: 300px; width: 100%;" class="mb-3">`
+                  : ""
+              }
+              ${
+                deepLink
+                  ? `<a href="${deepLink}" class="btn btn-primary btn-lg w-100 mb-3" target="_blank">Mở ứng dụng MoMo</a>`
+                  : ""
+              }
+              <p class="text-muted small">Đơn hàng sẽ tự động được tạo sau khi thanh toán thành công</p>
+              <div class="spinner-border text-primary mt-3" role="status">
+                <span class="visually-hidden">Đang chờ thanh toán...</span>
+              </div>
+              <p class="mt-2">Đang chờ xác nhận thanh toán...</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onclick="cancelPayment()">Hủy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+        // Remove existing modal if any
+        const existingModal = document.getElementById("momoQRModal");
+        if (existingModal) {
+          existingModal.remove();
+        }
+
+        // Add modal to body
+        document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+        // Show modal
+        const modal = new bootstrap.Modal(
+          document.getElementById("momoQRModal")
+        );
+        modal.show();
+
+        // Poll payment status (check every 5 seconds)
+        window.paymentCheckInterval = setInterval(async () => {
+          try {
+            // Check if payment is completed via backend callback
+            // For now, we'll create order after 30 seconds (demo purposes)
+            // In production, backend should handle IPN callback and create order
+          } catch (error) {
+            console.error("Error checking payment status:", error);
+          }
+        }, 5000);
+      }
+
+      window.cancelPayment = function () {
+        const modal = bootstrap.Modal.getInstance(
+          document.getElementById("momoQRModal")
+        );
+        if (modal) modal.hide();
+
+        if (window.paymentCheckInterval) {
+          clearInterval(window.paymentCheckInterval);
+        }
+
+        const submitBtn = document.querySelector(".checkout-btn");
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "Confirm & Pay";
+
+        window.Toast.info("Đã hủy thanh toán");
+      };
+
+      // Load cart summary on page load
+      async function loadCartSummary() {
+        try {
+          console.log("Loading cart summary...");
+          const cart = await window.CartService.get();
+          console.log("Cart data:", cart);
+
+          const summaryItemsContainer =
+            document.getElementById("cart-summary-items");
+          const totalAmountEl = document.getElementById("total-amount");
+
+          if (!summaryItemsContainer || !totalAmountEl) {
+            console.error("Summary containers not found");
+            return;
+          }
+
+          const items = cart.items || [];
+          let total = cart.total || 0;
+
+          console.log("Cart items:", items);
+
+          // Log first item to debug
+          if (items.length > 0) {
+            console.log("First item:", JSON.stringify(items[0], null, 2));
+          }
+
+          // Recalculate total if it's 0
+          if (total === 0 && items.length > 0) {
+            items.forEach((item) => {
+              const itemPrice = item.price || item.product?.price || 0;
+              const itemQuantity = item.quantity || 0;
+              total += itemPrice * itemQuantity;
+            });
+          }
+
+          console.log("Cart total:", total);
+
+          let itemsHTML = items
+            .map((item) => {
+              const product = item.product || {};
+              const itemPrice = item.price || product.price || 0;
+              const price = formatPrice(itemPrice * item.quantity);
+
+              return `
+          <div class="summary-item">
+            <div>
+              <div>${product.name}</div>
+              <div class="text-muted small">x${item.quantity}</div>
+            </div>
+            <div>${price}</div>
+          </div>
+        `;
+            })
+            .join("");
+
+          summaryItemsContainer.innerHTML = itemsHTML;
+          totalAmountEl.textContent = formatPrice(total);
+        } catch (error) {
+          console.error("Error loading cart summary:", error);
+          document.getElementById("total-amount").textContent = "0đ";
+        }
+      }
+
+      function formatPrice(price) {
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(price);
+      }
+      // ===== Prefill Name/Phone từ access token + đổ địa chỉ đã lưu vào dropdown =====
+      const LS_KEYS = {
+        billing: "billingAddress",
+        secondary: "secondaryAddress",
+      };
+
+      function readFromLS(key) {
+        try {
+          return JSON.parse(localStorage.getItem(key) || "{}");
+        } catch {
+          return {};
+        }
+      }
+
+      // Giải mã JWT (payload)
+      function decodeJWT(token) {
+        try {
+          const payload = token.split(".")[1];
+          const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+          const decoded = atob(normalized);
+          return JSON.parse(
+            decodeURIComponent(
+              decoded
+                .split("")
+                .map(
+                  (c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)
+                )
+                .join("")
+            )
+          );
+        } catch {
+          return {};
+        }
+      }
+
+      // Tìm token trong các vị trí hay dùng
+      function getAccessToken() {
+        // ưu tiên utils nếu có
+        if (window.Storage?.getToken) {
+          try {
+            return window.Storage.getToken();
+          } catch {}
+        }
+        // fallback phổ biến
+        return (
+          localStorage.getItem("access_token") ||
+          localStorage.getItem("accessToken") ||
+          sessionStorage.getItem("access_token") ||
+          ""
+        );
+      }
+
+      // Lấy profile từ token (tùy claim của backend bạn: cố gắng map các key thường gặp)
+      function getProfileFromToken() {
+        const token = getAccessToken();
+        if (!token) return {};
+        const payload = decodeJWT(token) || {};
+        const name =
+          payload.fullname ||
+          payload.name ||
+          [payload.first_name, payload.last_name].filter(Boolean).join(" ") ||
+          "";
+        const phone =
+          payload.phoneNumber || payload.phone || payload.mobile || "";
+        return { name, phone };
+      }
+
+      // Biến address object (đã lưu trước đó) thành 1 dòng hiển thị
+      function formatAddressLine(addr = {}) {
+        const parts = [
+          addr.street_address,
+          addr.state_id,
+          addr.country_id,
+          addr.zip_code,
+        ].filter(Boolean);
+        const who = [addr.first_name, addr.last_name].filter(Boolean).join(" ");
+        // Ví dụ: "12 Pasteur, HCM, VN 700000 — (Nguyen Van A)"
+        return `${parts.join(", ")}${who ? " — (" + who + ")" : ""}`;
+      }
+
+      // Đổ option vào select
+      function populateAddressSelect() {
+        const select = document.querySelector('select[name="address"]');
+        if (!select) return;
+
+        // Giữ option đầu "Choose an address..."
+        const firstOption =
+          select.querySelector('option[value=""]') ||
+          (() => {
+            const o = document.createElement("option");
+            o.value = "";
+            o.textContent = "Choose an address...";
+            select.prepend(o);
+            return o;
+          })();
+
+        // Xóa các option cũ (trừ option đầu)
+        Array.from(select.querySelectorAll("option"))
+          .filter((o) => o !== firstOption)
+          .forEach((o) => o.remove());
+
+        const billing = readFromLS(LS_KEYS.billing);
+        const secondary = readFromLS(LS_KEYS.secondary);
+
+        const entries = [];
+        if (billing && Object.keys(billing).length) {
+          entries.push({
+            label: formatAddressLine(billing),
+            value: formatAddressLine(billing),
+          });
+        }
+        if (secondary && Object.keys(secondary).length) {
+          entries.push({
+            label: formatAddressLine(secondary),
+            value: formatAddressLine(secondary),
+          });
+        }
+
+        // Nếu chưa có gì lưu, giữ nguyên danh sách mặc định hiện có của bạn (hoặc để trống)
+        if (entries.length) {
+          entries.forEach((e) => {
+            const opt = document.createElement("option");
+            opt.value = e.value;
+            opt.textContent = e.label;
+            select.appendChild(opt);
+          });
+        }
+
+        // Nếu có địa chỉ, tự chọn địa chỉ đầu
+        if (entries.length && !select.value) {
+          select.value = entries[0].value;
+        }
+      }
+
+      // Prefill Name/Phone từ token nếu input đang trống
+      function prefillNamePhoneFromToken() {
+        const { name, phone } = getProfileFromToken();
+        const nameInput = document.querySelector('input[name="name"]');
+        const phoneInput = document.querySelector('input[name="phone"]');
+
+        if (nameInput && !nameInput.value && name) nameInput.value = name;
+        if (phoneInput && !phoneInput.value && phone) phoneInput.value = phone;
+      }
+
+      // Tăng cường validate trước khi handleCheckout
+      function enforceCheckoutGuard() {
+        const form = document.querySelector(".checkout-left form");
+        const btn = document.querySelector(".checkout-btn");
+        if (!form || !btn) return;
+
+        const validate = () => {
+          const name = form.querySelector('input[name="name"]')?.value?.trim();
+          const phone = form
+            .querySelector('input[name="phone"]')
+            ?.value?.trim();
+          const address = form
+            .querySelector('select[name="address"]')
+            ?.value?.trim();
+          const ok = !!(name && phone && address);
+          btn.disabled = !ok;
+        };
+
+        // Lần đầu chạy + gắn sự kiện
+        validate();
+        form
+          .querySelectorAll(
+            'input[name="name"], input[name="phone"], select[name="address"]'
+          )
+          .forEach((el) => el.addEventListener("input", validate));
+        form
+          .querySelector('select[name="address"]')
+          ?.addEventListener("change", validate);
+      }
+
+      // Gọi sau khi header/footer & cart đã load (để DOM đầy đủ)
+      async function initCheckoutAutofill() {
+        prefillNamePhoneFromToken();
+        populateAddressSelect();
+        enforceCheckoutGuard();
+      }
+
+      // Gắn vào window để nếu cần gọi lại sau khi user đăng nhập xong
+      window.__initCheckoutAutofill = initCheckoutAutofill;
+
+      // Sau khi load xong header/footer + cart summary thì gọi (ở dưới bạn đã gọi 2 hàm đó)
+      // => thêm dòng gọi này ngay sau loadCartSummary():
+      // await loadHeaderFooter();
+      // await loadCartSummary();
+      // await window.__initCheckoutAutofill();
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Check authentication first
+        if (!window.AuthGuard.requireAuth()) {
+          return; // Will redirect to login
+        }
+
+        await loadHeaderFooter();
+        await loadCartSummary();
+        await window.__initCheckoutAutofill();
+      });
+    </script>
+  </body>
+</html>

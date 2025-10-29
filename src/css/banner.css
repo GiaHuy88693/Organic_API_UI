@@ -1,0 +1,146 @@
+.hero-banner {
+  min-height: 500px;
+  overflow: hidden;
+}
+
+.hero-banner .hero-bg img {
+  object-fit: cover;
+  object-position: right;
+}
+
+.hero-banner .container {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-banner .hero-bg {
+  z-index: 0;
+}
+
+.hero-banner .btn {
+  font-weight: 600;
+}
+
+.product-card {
+  transition: all 0.3s ease;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  padding: 1rem;
+  background-color: #fff;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0px 21px 44px rgba(0, 0, 0, 0.08);
+  z-index: 2;
+}
+
+/* card  */
+.product-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+  transition: box-shadow 0.2s ease;
+  position: relative;
+}
+
+.product-card:hover {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.product-card img {
+  height: 130px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.product-price {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.btn-add {
+  background-color: #198754;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  padding: 6px 16px;
+}
+
+.btn-add:hover {
+  background-color: #157347;
+}
+
+.product-card .favorite {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #198754;
+  font-size: 1.2rem;
+}
+
+.product-description {
+  font-size: 0.85rem;
+  min-height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* add */
+
+.form-container {
+  max-width: 600px;
+  margin: 60px auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.05);
+  padding: 40px;
+}
+
+h1 {
+  font-weight: 700;
+  color: #364127;
+}
+
+.form-control:focus {
+  border-color: #6bb252;
+  box-shadow: 0 0 0 0.2rem rgba(107, 178, 82, 0.25);
+}
+
+.btn-success {
+  background-color: #6bb252;
+  border-color: #6bb252;
+}
+
+.btn-success:hover {
+  background-color: #5ba148;
+  border-color: #5ba148;
+}
+.product-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  border: 1px solid #ddd;
+  min-height: 340px; /* Chiều cao cố định để không giãn */
+}
+
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 1;
+}
+
+.product-actions {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none; 
+}
+
+.product-card:hover .product-actions {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}

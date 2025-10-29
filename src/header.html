@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý sản phẩm</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+  <link rel="stylesheet" href="/src/index.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+    />
+  <link rel="stylesheet" href="/src/css/banner.css" />
+  <link rel="stylesheet" href="/src/css/list.css" />
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/toastify-js"
+    ></script>
+    <style>
+      body,
+      html {
+        font-family: "Poppins", Arial, Helvetica, sans-serif !important;
+      }
+    </style>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      body > main {
+        flex: 1;
+      }
+      footer {
+        margin-top: auto;
+      }
+      @media (max-width: 768px) {
+        .topbar-container {
+          flex-direction: column;
+          align-items: flex-start !important;
+          gap: 6px;
+        }
+        .topbar-container .dropdown {
+          font-size: 14px;
+        }
+        .topbar-container > div {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Topbar -->
+    <div class="bg-light border-bottom py-1 small text-muted">
+      <div
+        class="container d-flex justify-content-between align-items-center topbar-container"
+      >
+        <!-- Left: Store Info -->
+        <div><i class="bi bi-geo-alt me-1"></i> Store Location</div>
+        <!-- Right: Language / Currency -->
+        <div class="d-flex align-items-center gap-3">
+          <!-- Language Dropdown -->
+          <div class="dropdown">
+            <a
+              class="dropdown-toggle text-decoration-none text-muted"
+              href="#"
+              role="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              EN
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="?lang=en">English</a></li>
+              <li><a class="dropdown-item" href="?lang=vi">Tiếng Việt</a></li>
+            </ul>
+          </div>
+          <!-- Currency Dropdown -->
+          <div class="dropdown">
+            <a
+              class="dropdown-toggle text-decoration-none text-muted"
+              href="#"
+              role="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              USD
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="#">USD</a></li>
+              <li><a class="dropdown-item" href="#">VND</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <header class="bg-white border-bottom py-3 shadow-sm">
+      <div class="container d-flex align-items-center justify-content-between">
+        <!-- Logo -->
+        <a
+          href="/src/index.html"
+          class="d-flex align-items-center text-decoration-none"
+        >
+          <img
+            src="https://themewagon.github.io/organic/images/logo.svg"
+            alt="logo"
+            style="height: 30px"
+          />
+        </a>
+        <!-- Right: Account + Cart -->
+        <div class="d-flex align-items-center gap-3">
+          <!-- Nếu chưa đăng nhập -->
+          <div id="auth-guest">
+            <a
+              href="/src/pages/auth/register.html"
+              class="btn btn-outline-success btn-sm"
+              >Sign Up</a
+            >
+            <a href="/src/pages/auth/login.html" class="btn btn-success btn-sm"
+              >Sign In</a
+            >
+          </div>
+          <!-- Nếu đã đăng nhập thì thay đổi đoạn này -->
+          <div id="auth-user" class="d-none d-flex align-items-center">
+            <!-- Admin Dashboard Button - Only show for admins -->
+            <a
+              href="/src/pages/admin/dashboard.html"
+              id="adminDashboardBtn"
+              class="btn btn-sm btn-outline-primary me-2 d-none"
+              title="Back to Dashboard"
+            >
+              <i class="bi bi-speedometer2 me-1"></i>Dashboard
+            </a>
+            
+            <a
+              href="/src/pages/cart/cart.html"
+              class="d-flex align-items-center text-decoration-none text-success position-relative"
+            >
+              <i class="bi bi-cart3 fs-4"></i>
+            </a>
+            
+            <div class="vr mx-2"></div>
+            
+            <div class="dropdown position-relative me-3" style="z-index: 1050;">
+              <a
+                href="#"
+                class="d-flex align-items-center text-decoration-none text-success position-relative dropdown-toggle"
+                id="userDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                style="min-width: 32px"
+              >
+                <i class="bi bi-person-circle fs-4"></i>
+                <span id="userName" class="ms-2 small d-none"></span>
+              </a>
+              <ul
+                class="dropdown-menu dropdown-menu-end mt-2"
+                aria-labelledby="userDropdown"
+                style="z-index: 1051;"
+              >
+                <li id="adminItem" class="d-none">
+                  <a class="dropdown-item" href="/src/pages/admin/dashboard.html"
+                    ><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="/src/pages/account/profile.html"
+                    >Profile</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="/src/pages/account/dashboard.html"
+                    >Account</a
+                  >
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a class="dropdown-item" href="#" id="btnLogout">Logout</a>
+                </li>
+              </ul>
+              <span
+                id="adminBadge"
+                class="position-absolute top-0 start-100 translate-middle badge bg-dark text-white d-none"
+                style="
+                  font-size: 10px;
+                  padding: 2px 6px;
+                  border-radius: 999px;
+                  margin-left: 11px;
+                  z-index: 1;
+                "
+                >ADMIN</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+
+  <div
+    id="global-loader"
+    style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      display: none;
+    "
+  >
+    <!-- Hamster loading -->
+    <div
+      aria-label="Orange and tan hamster running in a metal wheel"
+      role="img"
+      class="wheel-and-hamster"
+    >
+      <div class="wheel"></div>
+      <div class="hamster">
+        <div class="hamster__body">
+          <div class="hamster__head">
+            <div class="hamster__ear"></div>
+            <div class="hamster__eye"></div>
+            <div class="hamster__nose"></div>
+          </div>
+          <div class="hamster__limb hamster__limb--fr"></div>
+          <div class="hamster__limb hamster__limb--fl"></div>
+          <div class="hamster__limb hamster__limb--br"></div>
+          <div class="hamster__limb hamster__limb--bl"></div>
+          <div class="hamster__tail"></div>
+        </div>
+      </div>
+      <div class="spoke"></div>
+    </div>
+  </div>
+  <style>
+    /* From Uiverse.io by Nawsome */
+    .wheel-and-hamster {
+      --dur: 1s;
+      position: relative;
+      width: 12em;
+      height: 12em;
+      font-size: 14px;
+    }
+
+    .wheel,
+    .hamster,
+    .hamster div,
+    .spoke {
+      position: absolute;
+    }
+
+    .wheel,
+    .spoke {
+      border-radius: 50%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .wheel {
+      background: radial-gradient(
+        100% 100% at center,
+        hsla(0, 0%, 60%, 0) 47.8%,
+        hsl(0, 0%, 60%) 48%
+      );
+      z-index: 2;
+    }
+
+    .hamster {
+      animation: hamster var(--dur) ease-in-out infinite;
+      top: 50%;
+      left: calc(50% - 3.5em);
+      width: 7em;
+      height: 3.75em;
+      transform: rotate(4deg) translate(-0.8em, 1.85em);
+      transform-origin: 50% 0;
+      z-index: 1;
+    }
+
+    .hamster__head {
+      animation: hamsterHead var(--dur) ease-in-out infinite;
+      background: hsl(30, 90%, 55%);
+      border-radius: 70% 30% 0 100% / 40% 25% 25% 60%;
+      box-shadow: 0 -0.25em 0 hsl(30, 90%, 80%) inset,
+        0.75em -1.55em 0 hsl(30, 90%, 90%) inset;
+      top: 0;
+      left: -2em;
+      width: 2.75em;
+      height: 2.5em;
+      transform-origin: 100% 50%;
+    }
+
+    .hamster__ear {
+      animation: hamsterEar var(--dur) ease-in-out infinite;
+      background: hsl(0, 90%, 85%);
+      border-radius: 50%;
+      box-shadow: -0.25em 0 hsl(30, 90%, 55%) inset;
+      top: -0.25em;
+      right: -0.25em;
+      width: 0.75em;
+      height: 0.75em;
+      transform-origin: 50% 75%;
+    }
+
+    .hamster__eye {
+      animation: hamsterEye var(--dur) linear infinite;
+      background-color: hsl(0, 0%, 0%);
+      border-radius: 50%;
+      top: 0.375em;
+      left: 1.25em;
+      width: 0.5em;
+      height: 0.5em;
+    }
+
+    .hamster__nose {
+      background: hsl(0, 90%, 75%);
+      border-radius: 35% 65% 85% 15% / 70% 50% 50% 30%;
+      top: 0.75em;
+      left: 0;
+      width: 0.2em;
+      height: 0.25em;
+    }
+
+    .hamster__body {
+      animation: hamsterBody var(--dur) ease-in-out infinite;
+      background: hsl(30, 90%, 90%);
+      border-radius: 50% 30% 50% 30% / 15% 60% 40% 40%;
+      box-shadow: 0.1em 0.75em 0 hsl(30, 90%, 55%) inset,
+        0.15em -0.5em 0 hsl(30, 90%, 80%) inset;
+      top: 0.25em;
+      left: 2em;
+      width: 4.5em;
+      height: 3em;
+      transform-origin: 17% 50%;
+      transform-style: preserve-3d;
+    }
+
+    .hamster__limb--fr,
+    .hamster__limb--fl {
+      clip-path: polygon(0 0, 100% 0, 70% 80%, 60% 100%, 0% 100%, 40% 80%);
+      top: 2em;
+      left: 0.5em;
+      width: 1em;
+      height: 1.5em;
+      transform-origin: 50% 0;
+    }
+
+    .hamster__limb--fr {
+      animation: hamsterFRLimb var(--dur) linear infinite;
+      background: linear-gradient(hsl(30, 90%, 80%) 80%, hsl(0, 90%, 75%) 80%);
+      transform: rotate(15deg) translateZ(-1px);
+    }
+
+    .hamster__limb--fl {
+      animation: hamsterFLLimb var(--dur) linear infinite;
+      background: linear-gradient(hsl(30, 90%, 90%) 80%, hsl(0, 90%, 85%) 80%);
+      transform: rotate(15deg);
+    }
+
+    .hamster__limb--br,
+    .hamster__limb--bl {
+      border-radius: 0.75em 0.75em 0 0;
+      clip-path: polygon(
+        0 0,
+        100% 0,
+        100% 30%,
+        70% 90%,
+        70% 100%,
+        30% 100%,
+        40% 90%,
+        0% 30%
+      );
+      top: 1em;
+      left: 2.8em;
+      width: 1.5em;
+      height: 2.5em;
+      transform-origin: 50% 30%;
+    }
+
+    .hamster__limb--br {
+      animation: hamsterBRLimb var(--dur) linear infinite;
+      background: linear-gradient(hsl(30, 90%, 80%) 90%, hsl(0, 90%, 75%) 90%);
+      transform: rotate(-25deg) translateZ(-1px);
+    }
+
+    .hamster__limb--bl {
+      animation: hamsterBLLimb var(--dur) linear infinite;
+      background: linear-gradient(hsl(30, 90%, 90%) 90%, hsl(0, 90%, 85%) 90%);
+      transform: rotate(-25deg);
+    }
+
+    .hamster__tail {
+      animation: hamsterTail var(--dur) linear infinite;
+      background: hsl(0, 90%, 85%);
+      border-radius: 0.25em 50% 50% 0.25em;
+      box-shadow: 0 -0.2em 0 hsl(0, 90%, 75%) inset;
+      top: 1.5em;
+      right: -0.5em;
+      width: 1em;
+      height: 0.5em;
+      transform: rotate(30deg) translateZ(-1px);
+      transform-origin: 0.25em 0.25em;
+    }
+
+    .spoke {
+      animation: spoke var(--dur) linear infinite;
+      background: radial-gradient(
+          100% 100% at center,
+          hsl(0, 0%, 60%) 4.8%,
+          hsla(0, 0%, 60%, 0) 5%
+        ),
+        linear-gradient(
+            hsla(0, 0%, 55%, 0) 46.9%,
+            hsl(0, 0%, 65%) 47% 52.9%,
+            hsla(0, 0%, 65%, 0) 53%
+          )
+          50% 50% / 99% 99% no-repeat;
+    }
+
+    /* Animations */
+    @keyframes hamster {
+      from,
+      to {
+        transform: rotate(4deg) translate(-0.8em, 1.85em);
+      }
+
+      50% {
+        transform: rotate(0) translate(-0.8em, 1.85em);
+      }
+    }
+
+    @keyframes hamsterHead {
+      from,
+      25%,
+      50%,
+      75%,
+      to {
+        transform: rotate(0);
+      }
+
+      12.5%,
+      37.5%,
+      62.5%,
+      87.5% {
+        transform: rotate(12deg);
+      }
+    }
+
+    @keyframes hamsterEye {
+      from,
+      90%,
+      to {
+        transform: scaleY(1);
+      }
+
+      95% {
+        transform: scaleY(0);
+      }
+    }
+
+    @keyframes hamsterEar {
+      from,
+      25%,
+      50%,
+      75%,
+      to {
+        transform: rotate(0);
+      }
+
+      12.5%,
+      37.5%,
+      62.5%,
+      87.5% {
+        transform: rotate(12deg);
+      }
+    }
+
+    @keyframes hamsterBody {
+      from,
+      25%,
+      50%,
+      75%,
+      to {
+        transform: rotate(0);
+      }
+
+      12.5%,
+      37.5%,
+      62.5%,
+      87.5% {
+        transform: rotate(-2deg);
+      }
+    }
+
+    @keyframes hamsterFRLimb {
+      from,
+      25%,
+      50%,
+      75%,
+      to {
+        transform: rotate(50deg) translateZ(-1px);
+      }
+
+      12.5%,
+      37.5%,
+      62.5%,
+      87.5% {
+        transform: rotate(-30deg) translateZ(-1px);
+      }
+    }
+
+    @keyframes hamsterFLLimb {
+      from,
+      25%,
+      50%,
+      75%,
+      to {
+        transform: rotate(-30deg);
+      }
+
+      12.5%,
+      37.5%,
+      62.5%,
+      87.5% {
+        transform: rotate(50deg);
+      }
+    }
+
+    @keyframes hamsterBRLimb {
+      from,
+      25%,
+      50%,
+      75%,
+      to {
+        transform: rotate(-60deg) translateZ(-1px);
+      }
+
+      12.5%,
+      37.5%,
+      62.5%,
+      87.5% {
+        transform: rotate(20deg) translateZ(-1px);
+      }
+    }
+
+    @keyframes hamsterBLLimb {
+      from,
+      25%,
+      50%,
+      75%,
+      to {
+        transform: rotate(20deg);
+      }
+
+      12.5%,
+      37.5%,
+      62.5%,
+      87.5% {
+        transform: rotate(-60deg);
+      }
+    }
+
+    @keyframes hamsterTail {
+      from,
+      25%,
+      50%,
+      75%,
+      to {
+        transform: rotate(30deg) translateZ(-1px);
+      }
+
+      12.5%,
+      37.5%,
+      62.5%,
+      87.5% {
+        transform: rotate(10deg) translateZ(-1px);
+      }
+    }
+
+    @keyframes spoke {
+      from {
+        transform: rotate(0);
+      }
+
+      to {
+        transform: rotate(-1turn);
+      }
+    }
+  </style>
+
+  <script>
+    const loader = document.getElementById("global-loader");
+
+    // Hiện loader trước khi chuyển trang
+    document.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", function () {
+        const href = this.getAttribute("href");
+        if (href && !href.startsWith("#") && !this.hasAttribute("target")) {
+          loader.style.display = "flex";
+        }
+      });
+    });
+
+    // Với form submit
+    document.querySelectorAll("form").forEach((form) => {
+      form.addEventListener("submit", function () {
+        loader.style.display = "flex";
+      });
+    });
+
+    // Hiện loader trong code JS (AJAX hoặc fetch API)
+    function showLoader() {
+      loader.style.display = "flex";
+    }
+    function hideLoader() {
+      loader.style.display = "none";
+    }
+  </script>
+
+  <!-- Auth UI script -->
+  <script>
+    function _getAccessToken() {
+      return localStorage.getItem("access_token") || localStorage.getItem("accessToken") || null;
+    }
+    function _clearTokens() {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+    }
+    function _decodeJwtPayload(token) {
+      try {
+        const payload = token.split(".")[1];
+        const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+        return JSON.parse(decodeURIComponent(escape(json)));
+      } catch (_) { return null; }
+    }
+    function applyAuthUI() {
+      const token = _getAccessToken();
+      const guest = document.getElementById("auth-guest");
+      const user  = document.getElementById("auth-user");
+      if (!guest || !user) return;
+
+      if (token) {
+        guest.classList.add("d-none");
+        user.classList.remove("d-none");
+
+        const payload = _decodeJwtPayload(token) || {};
+        const name = payload.name || payload.fullName || payload.email || "Account";
+        const nameEl = document.getElementById("userName");
+        if (nameEl) nameEl.textContent = name;
+
+        // Check if user is admin using roleName from token
+        const isAdmin = payload.roleName === "ADMIN" || 
+                       payload.role === "ADMIN" || 
+                       (Array.isArray(payload.roles) && payload.roles.includes("ADMIN"));
+        
+        document.getElementById("adminBadge")?.classList.toggle("d-none", !isAdmin);
+        document.getElementById("adminItem")?.classList.toggle("d-none", !isAdmin);
+        
+        // Log role for debugging
+        console.log('User role:', payload.roleName || payload.role);
+      } else {
+        user.classList.add("d-none");
+        guest.classList.remove("d-none");
+      }
+    }
+    document.addEventListener("click", function (e) {
+      if (e.target && e.target.id === "btnLogout") {
+        e.preventDefault();
+        _clearTokens();
+        applyAuthUI();
+        window.location.href = "/src/index.html";
+      }
+    });
+    // chạy khi header load
+    applyAuthUI();
+  </script>
+</html>

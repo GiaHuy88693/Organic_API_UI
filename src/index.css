@@ -1,0 +1,133 @@
+/* Hero banner */
+.hero-banner {
+  min-height: 500px;
+  overflow: hidden;
+}
+body,
+html {
+  font-family: "Poppins", Arial, Helvetica, sans-serif !important;
+}
+.hero-banner .hero-bg img {
+  object-fit: cover;
+  object-position: right;
+}
+
+.hero-banner .container {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-banner .hero-bg {
+  z-index: 0;
+}
+
+.hero-banner .btn {
+  font-weight: 600;
+}
+
+/* Product card - cleaned up version */
+.product-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1rem;
+  background-color: #fff;
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 1;
+}
+
+.product-card img {
+  height: 130px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.product-description {
+  font-size: 0.85rem;
+  min-height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-price {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.btn-add {
+  background-color: #198754;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  padding: 6px 16px;
+}
+
+.btn-add:hover {
+  background-color: #157347;
+}
+
+.product-card .favorite {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #198754;
+  font-size: 1.2rem;
+}
+
+/* ✅ Always show action buttons */
+.product-actions {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  pointer-events: auto !important;
+  transition: none !important;
+}
+
+/* Form style */
+.form-container {
+  max-width: 600px;
+  margin: 60px auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.05);
+  padding: 40px;
+}
+
+h1 {
+  font-weight: 700;
+  color: #364127;
+}
+
+.form-control:focus {
+  border-color: #6bb252;
+  box-shadow: 0 0 0 0.2rem rgba(107, 178, 82, 0.25);
+}
+
+.btn-success {
+  background-color: #6bb252;
+  border-color: #6bb252;
+}
+
+.btn-success:hover {
+  background-color: #5ba148;
+  border-color: #5ba148;
+}
+.product-actions {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  pointer-events: auto !important;
+  transition: none !important;
+}
+.toast-success { background: #16a34a !important; }
+.toast-error   { background: #dc2626 !important; }
+.toast-info    { background: #2563eb !important; }
+.toast-warn    { background: #d97706 !important; }

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Dashboard</title>
+
+    <!-- Bootstrap + Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background: #f8f9fa;
+      }
+      .sidebar-nav {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 24px;
+      }
+      .sidebar-nav h5 {
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+      }
+      .sidebar-nav .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 12px;
+        border-radius: 6px;
+        color: #4b5563;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background 0.2s;
+        position: relative;
+      }
+      .sidebar-nav .nav-link i {
+        font-size: 1rem;
+        margin-right: 10px;
+      }
+      .sidebar-nav .nav-link.active {
+        background-color: #f1f5f1;
+        color: #000;
+        font-weight: 600;
+      }
+      .sidebar-nav .nav-link.active::before {
+        content: "";
+        position: absolute;
+        left: -12px;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 24px;
+        width: 4px;
+        background-color: #22c55e;
+        border-radius: 2px;
+      }
+      .sidebar-nav .nav-link.logout {
+        color: #dc3545;
+      }
+      .sidebar-nav .nav-link:hover:not(.active) {
+        background-color: #f9f9f9;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="header"></div>
+
+    <main>
+      <div class="container py-5">
+        <div class="row">
+          <!-- Sidebar -->
+          <div class="col-md-3 mb-4">
+            <div class="sidebar-nav shadow-sm">
+              <h5>Account</h5>
+              <ul class="list-unstyled mb-0">
+                <li>
+                  <a href="#" class="nav-link active" data-tab="dashboard-tab">
+                    <i class="bi bi-grid"></i> Dashboard
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="nav-link" data-tab="orders-tab">
+                    <i class="bi bi-arrow-repeat"></i> Orders
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="nav-link" data-tab="wishlist-tab">
+                    <i class="bi bi-heart"></i> Wishlist
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="nav-link" data-tab="settings-tab">
+                    <i class="bi bi-gear"></i> Settings
+                  </a>
+                </li>
+                <li>
+                  <a href="/account/logout" class="nav-link logout">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Main Content Tabs -->
+          <div class="col-md-9">
+            <div id="dashboard-tab" class="tab-section"></div>
+            <div id="orders-tab" class="tab-section d-none"></div>
+            <div id="wishlist-tab" class="tab-section d-none"></div>
+            <div id="cart-tab" class="tab-section d-none"></div>
+            <div id="settings-tab" class="tab-section d-none"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="footer"></div>
+
+    <!-- ========= Core JS (dùng chung cho tất cả section) ========= -->
+    <script src="/src/js/config/api.config.js"></script>
+    <script src="/src/js/utils/storage.js"></script>
+    <script src="/src/js/utils/http.client.js"></script>
+    <script src="/src/js/services/auth.service.js"></script>
+    <script src="/src/js/services/wishlist.service.js"></script>
+    <script src="/src/js/services/order.service.js"></script>
+    <script src="/src/js/services/cart.service.js"></script>
+
+    <script>
+      // ---- Giống show.html: nạp header/footer & giữ trạng thái đăng nhập ----
+      async function execScriptsIn(container) {
+        if (!container) return Promise.resolve();
+        const scripts = Array.from(container.querySelectorAll("script"));
+        for (const old of scripts) {
+          const s = document.createElement("script");
+          // copy attributes
+          for (const attr of old.attributes)
+            s.setAttribute(attr.name, attr.value);
+          if (old.src) {
+            await new Promise((resolve) => {
+              s.onload = s.onerror = resolve;
+              s.async = false;
+              s.src = old.src;
+              old.replaceWith(s);
+            });
+          } else {
+            s.textContent = old.textContent;
+            old.replaceWith(s);
+          }
+        }
+      }
+
+      async function loadHeaderFooter() {
+        try {
+          const [headerHtml, footerHtml] = await Promise.all([
+            fetch("/src/header.html").then((res) => res.text()),
+            fetch("/src/footer.html").then((res) => res.text()),
+          ]);
+          const headerEl = document.getElementById("header");
+          const footerEl = document.getElementById("footer");
+
+          if (headerEl) {
+            headerEl.innerHTML = headerHtml;
+            await execScriptsIn(headerEl);
+            window.applyAuthUI?.(); // cập nhật UI đăng nhập
+          }
+          if (footerEl) {
+            footerEl.innerHTML = footerHtml;
+            await execScriptsIn(footerEl);
+          }
+        } catch (err) {
+          console.warn("Không thể tải header/footer:", err);
+        }
+      }
+
+      // ---- Nạp một section vào tab và KÍCH HOẠT script bên trong section ----
+      async function loadTab(tabId, file) {
+        const html = await fetch(file).then((res) => res.text());
+        const host = document.getElementById(tabId);
+        host.innerHTML = html;
+        await execScriptsIn(host); // chạy script trong section
+      }
+
+      function showTab(tabId) {
+        document
+          .querySelectorAll(".tab-section")
+          .forEach((el) => el.classList.add("d-none"));
+        document.getElementById(tabId).classList.remove("d-none");
+
+        document
+          .querySelectorAll(".sidebar-nav .nav-link")
+          .forEach((link) => link.classList.remove("active"));
+        const activeLink = document.querySelector(
+          `.sidebar-nav .nav-link[data-tab="${tabId}"]`
+        );
+        if (activeLink) activeLink.classList.add("active");
+      }
+
+      function initAccountTabs() {
+        // Nạp tất cả section (script trong từng section sẽ tự chạy)
+        loadTab("dashboard-tab", "section_dashboard.html");
+        loadTab("orders-tab", "section_orders.html");
+        loadTab("wishlist-tab", "section_wishlist.html");
+        // TODO: khi có file riêng cho cart, đổi path dưới đây thành "section_cart.html"
+        loadTab("cart-tab", "section_wishlist.html"); // tạm dùng wishlist làm demo
+        loadTab("settings-tab", "section_settings.html");
+
+        // Chuyển tab khi click
+        document.querySelectorAll(".nav-link[data-tab]").forEach((link) => {
+          link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const tabId = link.getAttribute("data-tab");
+            showTab(tabId);
+          });
+        });
+
+        // Deep-link qua hash ?tab=... hoặc #... nếu muốn
+        const urlParams = new URLSearchParams(location.search);
+        const qTab = urlParams.get("tab");
+        const hashTab = location.hash?.replace("#", "");
+        const defaultTab = qTab || hashTab || "dashboard-tab";
+        showTab(defaultTab);
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        await loadHeaderFooter();
+        initAccountTabs();
+      });
+
+      async function execScriptsIn(container) {
+        if (!container) return;
+        const scripts = Array.from(container.querySelectorAll("script"));
+        for (const old of scripts) {
+          const s = document.createElement("script");
+          // copy attributes
+          for (const attr of old.attributes)
+            s.setAttribute(attr.name, attr.value);
+          if (old.src) {
+            await new Promise((done) => {
+              s.onload = s.onerror = done;
+              s.async = false;
+              s.src = old.src;
+              old.replaceWith(s);
+            });
+          } else {
+            s.textContent = old.textContent;
+            old.replaceWith(s);
+          }
+        }
+      }
+      // --- Header/Footer ---
+      async function loadHeaderFooter() {
+        try {
+          const [headerHtml, footerHtml] = await Promise.all([
+            fetch("/src/header.html").then((r) => r.text()),
+            fetch("/src/footer.html").then((r) => r.text()),
+          ]);
+          const headerEl = document.getElementById("header");
+          const footerEl = document.getElementById("footer");
+
+          if (headerEl) {
+            headerEl.innerHTML = headerHtml;
+            await execScriptsIn(headerEl);
+            // cập nhật UI trạng thái đăng nhập nếu header có hàm này
+            window.applyAuthUI?.();
+          }
+          if (footerEl) {
+            footerEl.innerHTML = footerHtml;
+            await execScriptsIn(footerEl);
+          }
+        } catch (err) {
+          console.warn("Không thể tải header/footer:", err);
+        }
+      }
+
+      // --- Nạp 1 section vào tab ---
+      async function loadTab(tabId, file) {
+        const host = document.getElementById(tabId);
+        const html = await fetch(file).then((r) => r.text());
+        host.innerHTML = html;
+        await execScriptsIn(host); // chạy script của section
+      }
+
+      // --- Hiển thị tab + set active ở sidebar ---
+      function showTab(tabId) {
+        document.querySelectorAll(".tab-section").forEach((el) => {
+          el.classList.add("d-none");
+        });
+        const target = document.getElementById(tabId);
+        if (target) target.classList.remove("d-none");
+
+        document.querySelectorAll(".sidebar-nav .nav-link").forEach((a) => {
+          a.classList.remove("active");
+        });
+        const active = document.querySelector(
+          `.sidebar-nav .nav-link[data-tab="${tabId}"]`
+        );
+        if (active) active.classList.add("active");
+      }
+
+      // ---- Giữ tab khi reload: ?tab=... + localStorage + pushState ----
+      const TAB_KEY = "account:lastTab";
+      function readTabFromURLOrMemory() {
+        const url = new URL(location.href);
+        const qTab = url.searchParams.get("tab");
+        if (qTab) return qTab; // ưu tiên query
+        const hashTab = location.hash?.replace("#", "") || "";
+        if (hashTab) return hashTab;
+        const mem = localStorage.getItem(TAB_KEY);
+        return mem || "dashboard-tab";
+      }
+      function writeTabToURLAndMemory(tabId) {
+        // lưu localStorage
+        localStorage.setItem(TAB_KEY, tabId);
+        // cập nhật URL (không reload)
+        const url = new URL(location.href);
+        url.searchParams.set("tab", tabId);
+        history.replaceState(null, "", url.toString());
+      }
+
+      function bindSidebarNav() {
+        document.querySelectorAll(".nav-link[data-tab]").forEach((link) => {
+          link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const tabId = link.getAttribute("data-tab");
+            showTab(tabId);
+            writeTabToURLAndMemory(tabId);
+          });
+        });
+      }
+
+      // Cho phép các link trong section nhảy tới Settings (data-goto-settings)
+      function bindGotoSettings() {
+        document.body.addEventListener("click", (e) => {
+          const a = e.target.closest("[data-goto-settings]");
+          if (!a) return;
+          e.preventDefault();
+          showTab("settings-tab");
+          writeTabToURLAndMemory("settings-tab");
+        });
+      }
+
+      async function initAccountTabs() {
+        // Nạp tất cả section (mỗi section tự gọi API của nó)
+        // Lưu ý: đường dẫn là cùng thư mục với dashboard.html
+        await Promise.all([
+          loadTab("dashboard-tab", "section_dashboard.html"),
+          loadTab("orders-tab", "section_orders.html"),
+          loadTab("wishlist-tab", "section_wishlist.html"),
+          // TODO: thay bằng section_cart.html khi có file riêng
+          loadTab("settings-tab", "section_settings.html"),
+        ]);
+
+        bindSidebarNav();
+        bindGotoSettings();
+
+        // Mở đúng tab (URL/ghi nhớ)
+        const defaultTab = readTabFromURLOrMemory();
+        showTab(defaultTab);
+        writeTabToURLAndMemory(defaultTab);
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        await loadHeaderFooter();
+        initAccountTabs();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý sản phẩm - Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <style>
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: #f8f9fa;
+    }
+    /* Ensure header dropdown works properly */
+    #header {
+      position: relative;
+      z-index: 1050;
+    }
+    .dropdown-menu {
+      z-index: 1051 !important;
+    }
+    .product-image-preview {
+      max-width: 80px;
+      max-height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .table-actions .btn {
+      padding: 4px 12px;
+      font-size: 13px;
+    }
+    .product-image-preview {
+      max-width: 80px;
+      max-height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .badge-status {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    /* Pagination styling */
+    .pagination {
+      margin: 0;
+      gap: 4px;
+    }
+    .page-link {
+      color: #2d2d2d;
+      border: 1px solid #e0e0e0;
+      padding: 0.35rem 0.5rem;
+      font-size: 13px;
+      min-width: 32px;
+      text-align: center;
+      border-radius: 4px;
+    }
+    .page-link:hover {
+      background-color: #00b207;
+      color: white;
+      border-color: #00b207;
+    }
+    .page-item.active .page-link {
+      background-color: #00b207;
+      border-color: #00b207;
+      color: white;
+    }
+    .page-item.disabled .page-link {
+      cursor: not-allowed;
+      background-color: #f8f9fa;
+    }
+    .page-item {
+      margin: 0;
+    }
+    .pagination {
+      flex-wrap: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="header"></div>
+
+  <div class="container my-5">
+    <div class="card shadow-sm rounded-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <!-- Left: Back to Dashboard -->
+          <a href="/src/pages/admin/dashboard.html" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+          </a>
+          
+          <!-- Center: Title -->
+          <h4 class="mb-0 fw-bold text-center flex-grow-1">Quản lý sản phẩm</h4>
+          
+          <!-- Right: Add button -->
+          <button class="btn btn-success" onclick="openCreateModal()">
+            <i class="fas fa-plus me-2"></i>Thêm sản phẩm
+          </button>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="mb-3">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <input 
+                type="text" 
+                id="searchInput" 
+                class="form-control" 
+                placeholder="Tìm kiếm sản phẩm..."
+                onkeyup="handleSearch()"
+              >
+            </div>
+            
+            <div class="col-md-2">
+              <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                <i class="fas fa-redo me-1"></i>Làm mới
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+          <table class="table table-hover align-middle bg-white">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 5%">#</th>
+                <th style="width: 10%">Hình ảnh</th>
+                <th style="width: 25%">Tên sản phẩm</th>
+                <th style="width: 30%">Mô tả</th>
+                <th style="width: 10%">Giá</th>
+                <th style="width: 8%">Số lượng</th>
+                <th style="width: 12%" class="text-center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="productTableBody">
+              <tr>
+                <td colspan="7" class="text-center py-5">
+                  <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <div class="text-muted" id="paginationInfo">
+            Hiển thị 0 - 0 trong tổng số 0 sản phẩm
+          </div>
+          <nav>
+            <ul class="pagination mb-0" id="paginationControls"></ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer"></div>
+
+  <!-- Create/Edit Product Modal -->
+  <div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle">Thêm sản phẩm mới</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="productForm" onsubmit="handleFormSubmit(event)">
+          <div class="modal-body">
+            <input type="hidden" id="productId">
+            <input type="hidden" id="isEditMode" value="false">
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="productName" class="form-label">
+                  Tên sản phẩm <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="productName" 
+                  required
+                  minlength="1"
+                  placeholder="Nhập tên sản phẩm"
+                >
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label for="productPrice" class="form-label">
+                  Giá (VNĐ) <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="productPrice" 
+                  required
+                  min="0"
+                  step="any"
+                  placeholder="0"
+                >
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label for="productQuantity" class="form-label">
+                  Số lượng <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="productQuantity" 
+                  required
+                  min="0"
+                  placeholder="0"
+                >
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="productDescription" class="form-label">Mô tả</label>
+              <textarea 
+                class="form-control" 
+                id="productDescription" 
+                rows="4"
+                placeholder="Nhập mô tả chi tiết về sản phẩm..."
+              ></textarea>
+            </div>
+
+            <!-- Upload Images Section -->
+            <div class="mb-3">
+              <label for="productImages" class="form-label">
+                Hình ảnh sản phẩm
+                <small class="text-muted">(Tối đa 10 ảnh)</small>
+              </label>
+              <input 
+                type="file" 
+                class="form-control" 
+                id="productImages" 
+                accept="image/*"
+                multiple
+              >
+              <div class="form-text">
+                <i class="fas fa-info-circle"></i>
+                Chọn nhiều ảnh bằng cách giữ Ctrl (Windows) hoặc Cmd (Mac)
+              </div>
+              
+              <!-- Image Preview -->
+              <div id="imagePreviewContainer" class="mt-3 d-none">
+                <label class="form-label">Xem trước:</label>
+                <div id="imagePreview" class="d-flex flex-wrap gap-2"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times me-1"></i>Hủy
+            </button>
+            <button type="submit" class="btn btn-success" id="submitButton">
+              <i class="fas fa-save me-1"></i>Lưu
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="/src/js/utils/toast.js"></script>
+  <script src="/src/js/utils/storage.js"></script>
+  <script src="/src/js/utils/auth.guard.js"></script>
+  <script src="/src/js/utils/http.client.js"></script>
+  <script src="/src/js/config/api.config.js"></script>
+  <script src="/src/js/services/product.service.js"></script>
+
+  <script>
+    // Check admin authentication
+    if (!AuthGuard.requireAdmin()) {
+      throw new Error('Unauthorized - redirecting to login');
+    }
+
+    // State management
+    let currentPage = 1;
+    let currentLimit = 10;
+    let currentSearch = '';
+    let totalPages = 0;
+    let totalProducts = 0;
+
+    // Initialize page - SAME AS CATEGORY/ROLE
+    document.addEventListener('DOMContentLoaded', async function() {
+      await loadHeaderFooter();
+      
+      // Hide global loader if it exists
+      const globalLoader = document.getElementById('global-loader');
+      if (globalLoader) {
+        globalLoader.style.display = 'none';
+      }
+      
+      // Fix accessibility issue with modal focus
+      const productModal = document.getElementById('productModal');
+      if (productModal) {
+        // When modal is hiding, blur the close button to prevent aria-hidden warning
+        productModal.addEventListener('hide.bs.modal', function() {
+          const activeElement = document.activeElement;
+          if (activeElement && activeElement.classList.contains('btn-close')) {
+            activeElement.blur();
+          }
+        });
+        
+        // After modal is hidden, ensure focus returns to body
+        productModal.addEventListener('hidden.bs.modal', function() {
+          document.body.focus();
+          // Also clean up any orphaned backdrops
+          cleanupOrphanedBackdrops();
+        });
+      }
+      
+      // Setup image preview
+      setupImagePreview();
+      
+      loadProducts();
+    });
+
+    // Load header/footer with script execution - SAME AS CATEGORY/ROLE
+    async function loadHeaderFooter() {
+      try {
+        const [headerHtml, footerHtml] = await Promise.all([
+          fetch("/src/header.html").then((res) => res.text()),
+          fetch("/src/footer.html").then((res) => res.text()),
+        ]);
+
+        document.getElementById("header").innerHTML = headerHtml;
+        document.getElementById("footer").innerHTML = footerHtml;
+
+        // Execute scripts in header/footer to trigger applyAuthUI()
+        execScriptsIn(document.getElementById("header"));
+        execScriptsIn(document.getElementById("footer"));
+
+        // Debug: Add click listener to see if events are firing
+        setTimeout(() => {
+          const userDropdown = document.getElementById('userDropdown');
+          if (userDropdown) {
+            console.log('User dropdown element found:', userDropdown);
+            console.log('Has data-bs-toggle:', userDropdown.getAttribute('data-bs-toggle'));
+            
+            // Try to manually toggle on click
+            userDropdown.addEventListener('click', function(e) {
+              console.log('User dropdown clicked!', e);
+              e.preventDefault();
+              e.stopPropagation();
+              
+              const dropdownInstance = bootstrap.Dropdown.getOrCreateInstance(userDropdown);
+              console.log('Dropdown instance:', dropdownInstance);
+              dropdownInstance.toggle();
+            });
+          }
+        }, 100);
+      } catch (error) {
+        console.error("Error loading header/footer:", error);
+      }
+    }
+
+    // Execute scripts in container - SAME AS CATEGORY/ROLE
+    function execScriptsIn(container) {
+      if (!container) return;
+      const scripts = Array.from(container.querySelectorAll("script"));
+      scripts.forEach((oldScript) => {
+        const newScript = document.createElement("script");
+        if (oldScript.src) newScript.src = oldScript.src;
+        else newScript.textContent = oldScript.textContent;
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+      });
+    }
+
+    /**
+     * Load products with pagination
+     */
+    async function loadProducts(page = 1) {
+      currentPage = page;
+      
+      // Show loading spinner
+      const tbody = document.getElementById('productTableBody');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center py-4">
+            <div class="spinner-border text-success" role="status">
+              <span class="visually-hidden">Đang tải...</span>
+            </div>
+            <p class="text-muted mt-2 mb-0">Đang tải dữ liệu...</p>
+          </td>
+        </tr>
+      `;
+      
+      try {
+        console.log('⏳ Loading products...', { page, limit: currentLimit, search: currentSearch });
+        
+        const response = await Promise.race([
+          ProductService.list({
+            page: String(currentPage),
+            limit: String(currentLimit),
+            search: currentSearch,
+            includeDeleted: 'false'
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timeout after 10s')), 10000)
+          )
+        ]);
+
+        console.log('✅ Product list response:', response);
+
+        if (!response) {
+          throw new Error('Không nhận được dữ liệu từ server');
+        }
+
+        const { items, pagination } = response;
+        console.log('📦 Items:', items);
+        console.log('📄 Pagination:', pagination);
+
+        if (pagination) {
+          totalPages = pagination.totalPages || 1;
+          totalProducts = pagination.total || 0;
+        }
+
+        console.log('🎨 Calling renderProducts...');
+        renderProducts(items || []);
+        console.log('✅ renderProducts done');
+        
+        renderPagination();
+        updatePaginationInfo();
+        
+        // Hide global loader after rendering
+        const globalLoader = document.getElementById('global-loader');
+        if (globalLoader) {
+          globalLoader.style.display = 'none';
+        }
+        
+        console.log('✅ All rendering complete');
+
+      } catch (error) {
+        console.error('❌ Load products error:', error);
+        console.error('Error stack:', error.stack);
+        window.Toast?.error?.(error.message || 'Không thể tải danh sách sản phẩm');
+        
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center py-5">
+              <i class="fas fa-exclamation-triangle text-warning fs-3 mb-3"></i>
+              <p class="text-muted mb-2">${error.message || 'Có lỗi xảy ra khi tải dữ liệu'}</p>
+              <button class="btn btn-sm btn-success" onclick="window.location.reload()">
+                <i class="fas fa-redo me-1"></i>Refresh trang
+              </button>
+            </td>
+          </tr>
+        `;
+        throw error; // Re-throw để caller biết có lỗi
+      }
+    }
+
+    /**
+     * Render products table
+     */
+    function renderProducts(products) {
+      const tbody = document.getElementById('productTableBody');
+      
+      console.log('🎨 Rendering products...', products.length, 'items');
+      
+      // Log detailed info for each product
+      products.forEach((p, i) => {
+        console.log(`📦 Product ${i + 1}:`, {
+          id: p._id,
+          name: p.name,
+          images: p.images,
+          imageCount: p.images?.length || 0,
+          deletedAt: p.deletedAt,
+          isDeleted: !!p.deletedAt
+        });
+      });
+      
+      // Filter out deleted products (backend may not respect includeDeleted param)
+      const activeProducts = products.filter(p => {
+        const isDeleted = p.deletedAt !== null && p.deletedAt !== undefined;
+        if (isDeleted) {
+          console.log('🗑️ Filtering out deleted product:', p.name, 'deletedAt:', p.deletedAt);
+        }
+        return !isDeleted;
+      });
+      
+      console.log('✅ Active products after filter:', activeProducts.length);
+      
+      if (!activeProducts || activeProducts.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center py-5">
+              <i class="fas fa-inbox fs-1 text-muted mb-3"></i>
+              <p class="text-muted mb-0">Không có sản phẩm nào</p>
+              ${products.length > 0 ? '<p class="text-muted small mt-2">Tất cả sản phẩm đã bị xóa</p>' : ''}
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = activeProducts.map((product, index) => {
+        const rowNumber = (currentPage - 1) * currentLimit + index + 1;
+        const primaryImage = product.images?.find(img => img.isPrimary)?.url || 
+                           product.images?.[0]?.url || 
+                           'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23ddd" width="80" height="80"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="12" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
+        
+        const formattedPrice = new Intl.NumberFormat('vi-VN', {
+          style: 'currency',
+          currency: 'VND'
+        }).format(product.price);
+
+        const truncatedDescription = product.description && product.description.length > 50
+          ? product.description.substring(0, 50) + '...'
+          : product.description || '-';
+
+        return `
+          <tr>
+            <td class="fw-bold">${rowNumber}</td>
+            <td>
+              <img src="${primaryImage}" alt="${product.name}" class="product-image-preview">
+            </td>
+            <td>
+              <div class="fw-bold">${product.name}</div>
+              <small class="text-muted">${product.slug || ''}</small>
+            </td>
+            <td>
+              <small class="text-muted">${truncatedDescription}</small>
+            </td>
+            <td class="fw-bold text-success">${formattedPrice}</td>
+            <td>
+              <span class="badge ${product.quantity > 0 ? 'bg-success' : 'bg-danger'}">
+                ${product.quantity}
+              </span>
+            </td>
+            <td class="text-center table-actions">
+              <button class="btn btn-sm btn-warning" onclick="openEditModal('${product.id}')" title="Chỉnh sửa">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.id}')" title="Xóa">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /**
+     * Render pagination controls
+     */
+    function renderPagination() {
+      const pagination = document.getElementById('paginationControls');
+      
+      if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+
+      // Previous button
+      html += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+          <a class="page-link" href="#" onclick="loadProducts(${currentPage - 1}); return false;">‹</a>
+        </li>
+      `;
+
+      // Simplified page numbers - only show current and adjacent pages
+      if (totalPages <= 5) {
+        // Show all pages if 5 or less
+        for (let i = 1; i <= totalPages; i++) {
+          html += `
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+              <a class="page-link" href="#" onclick="loadProducts(${i}); return false;">${i}</a>
+            </li>
+          `;
+        }
+      } else {
+        // Show current page and neighbors
+        if (currentPage > 1) {
+          html += `
+            <li class="page-item">
+              <a class="page-link" href="#" onclick="loadProducts(1); return false;">1</a>
+            </li>
+          `;
+          if (currentPage > 2) {
+            html += '<li class="page-item disabled"><span class="page-link">…</span></li>';
+          }
+        }
+        
+        // Current page
+        html += `
+          <li class="page-item active">
+            <a class="page-link" href="#" onclick="return false;">${currentPage}</a>
+          </li>
+        `;
+        
+        if (currentPage < totalPages) {
+          if (currentPage < totalPages - 1) {
+            html += '<li class="page-item disabled"><span class="page-link">…</span></li>';
+          }
+          html += `
+            <li class="page-item">
+              <a class="page-link" href="#" onclick="loadProducts(${totalPages}); return false;">${totalPages}</a>
+            </li>
+          `;
+        }
+      }
+
+      // Next button
+      html += `
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+          <a class="page-link" href="#" onclick="loadProducts(${currentPage + 1}); return false;">›</a>
+        </li>
+      `;
+
+      pagination.innerHTML = html;
+    }
+
+    /**
+     * Update pagination info text
+     */
+    function updatePaginationInfo() {
+      const start = (currentPage - 1) * currentLimit + 1;
+      const end = Math.min(currentPage * currentLimit, totalProducts);
+      
+      document.getElementById('paginationInfo').textContent = 
+        `Hiển thị ${start} - ${end} trong tổng số ${totalProducts} sản phẩm`;
+    }
+
+    /**
+     * Handle search
+     */
+    let searchTimeout;
+    function handleSearch() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        currentSearch = document.getElementById('searchInput').value.trim();
+        loadProducts(1); // Reset to page 1 when searching
+      }, 500);
+    }
+
+    /**
+     * Change items per page limit
+     */
+    // changeLimit removed - limit is fixed at 10 sản phẩm / trang
+
+    /**
+     * Reset all filters
+     */
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      currentSearch = '';
+      currentLimit = 10;
+      loadProducts(1);
+    }
+
+    /**
+     * Get or create modal instance
+     */
+    function getModalInstance() {
+      const modalElement = document.getElementById('productModal');
+      let modalInstance = bootstrap.Modal.getInstance(modalElement);
+      if (!modalInstance) {
+        modalInstance = new bootstrap.Modal(modalElement, {
+          backdrop: true,  // Show backdrop
+          keyboard: true   // Allow ESC to close
+        });
+      }
+      return modalInstance;
+    }
+
+    /**
+     * Setup image preview functionality
+     */
+    function setupImagePreview() {
+      const imageInput = document.getElementById('productImages');
+      const previewContainer = document.getElementById('imagePreviewContainer');
+      const previewDiv = document.getElementById('imagePreview');
+      
+      if (!imageInput) return;
+      
+      imageInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        
+        if (files.length === 0) {
+          previewContainer.classList.add('d-none');
+          previewDiv.innerHTML = '';
+          return;
+        }
+        
+        previewContainer.classList.remove('d-none');
+        previewDiv.innerHTML = '';
+        
+        // Limit to 10 images
+        const filesToShow = Array.from(files).slice(0, 10);
+        
+        filesToShow.forEach((file, index) => {
+          if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+              const imgWrapper = document.createElement('div');
+              imgWrapper.className = 'position-relative';
+              imgWrapper.style.cssText = 'width: 100px; height: 100px;';
+              
+              const img = document.createElement('img');
+              img.src = event.target.result;
+              img.className = 'img-thumbnail';
+              img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+              img.alt = file.name;
+              
+              const badge = document.createElement('span');
+              badge.className = 'position-absolute top-0 start-0 badge bg-success m-1';
+              badge.textContent = `${index + 1}`;
+              
+              imgWrapper.appendChild(img);
+              imgWrapper.appendChild(badge);
+              previewDiv.appendChild(imgWrapper);
+            };
+            
+            reader.readAsDataURL(file);
+          }
+        });
+        
+        if (files.length > 10) {
+          window.Toast?.warning?.('Chỉ có thể upload tối đa 10 ảnh');
+        }
+      });
+    }
+
+    /**
+     * Clean up any orphaned backdrops
+     */
+    function cleanupOrphanedBackdrops() {
+      // Only remove backdrops if modal is NOT shown
+      const modalElement = document.getElementById('productModal');
+      if (!modalElement.classList.contains('show')) {
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+      }
+    }
+
+    /**
+     * Open create product modal
+     */
+    function openCreateModal() {
+      document.getElementById('modalTitle').textContent = 'Thêm sản phẩm mới';
+      document.getElementById('productForm').reset();
+      document.getElementById('productId').value = '';
+      document.getElementById('isEditMode').value = 'false';
+      
+      // Clear image preview
+      document.getElementById('productImages').value = '';
+      document.getElementById('imagePreviewContainer').classList.add('d-none');
+      document.getElementById('imagePreview').innerHTML = '';
+      
+      // Clean up any orphaned backdrops from previous errors
+      cleanupOrphanedBackdrops();
+      
+      const modal = getModalInstance();
+      modal.show();
+    }
+
+    /**
+     * Open edit product modal
+     */
+    async function openEditModal(productId) {
+      try {
+        const product = await ProductService.getById(productId);
+        
+        document.getElementById('modalTitle').textContent = 'Chỉnh sửa sản phẩm';
+        document.getElementById('productId').value = product.id;
+        document.getElementById('isEditMode').value = 'true';
+        document.getElementById('productName').value = product.name;
+        document.getElementById('productDescription').value = product.description || '';
+        document.getElementById('productPrice').value = product.price;
+        document.getElementById('productQuantity').value = product.quantity;
+        
+        // Clean up any orphaned backdrops from previous errors
+        cleanupOrphanedBackdrops();
+        
+        const modal = getModalInstance();
+        modal.show();
+        
+      } catch (error) {
+        console.error('Load product error:', error);
+        window.Toast?.error?.(error.message || 'Không thể tải thông tin sản phẩm');
+      }
+    }
+
+    /**
+     * Handle form submit (create/update)
+     */
+    async function handleFormSubmit(event) {
+      event.preventDefault();
+      
+      const submitButton = document.getElementById('submitButton');
+      const originalText = submitButton.innerHTML;
+      submitButton.disabled = true;
+      submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang lưu...';
+
+      try {
+        const isEditMode = document.getElementById('isEditMode').value === 'true';
+        const productId = document.getElementById('productId').value;
+        
+        const productData = {
+          name: document.getElementById('productName').value.trim(),
+          description: document.getElementById('productDescription').value.trim(),
+          price: parseFloat(document.getElementById('productPrice').value),
+          quantity: parseInt(document.getElementById('productQuantity').value)
+        };
+
+        if (isEditMode) {
+          // Update product
+          await ProductService.update(productId, productData);
+          window.Toast?.success?.('Cập nhật sản phẩm thành công!');
+        } else {
+          // Create product
+          const createdProduct = await ProductService.create(productData);
+          console.log('✅ Product created:', createdProduct);
+          
+          // Upload images if any
+          const imageInput = document.getElementById('productImages');
+          if (imageInput && imageInput.files.length > 0) {
+            const files = Array.from(imageInput.files).slice(0, 10); // Max 10 images
+            
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang upload ảnh...';
+            
+            try {
+              await ProductService.uploadImages(createdProduct.id, files);
+              console.log('✅ Images uploaded successfully');
+              window.Toast?.success?.('Thêm sản phẩm và upload ảnh thành công!');
+            } catch (uploadError) {
+              console.error('❌ Upload images error:', uploadError);
+              window.Toast?.warning?.('Sản phẩm đã được tạo nhưng upload ảnh thất bại');
+            }
+          } else {
+            window.Toast?.success?.('Thêm sản phẩm mới thành công!');
+          }
+        }
+
+        // Re-enable button immediately after save
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+
+        // Close modal properly - Bootstrap will handle backdrop automatically
+        const modalInstance = getModalInstance();
+        modalInstance.hide();
+        
+        // Cleanup after hide animation completes (only if needed)
+        setTimeout(() => {
+          cleanupOrphanedBackdrops();
+        }, 400);
+        
+        // Reload list with error handling
+        try {
+          await loadProducts(currentPage);
+        } catch (reloadError) {
+          console.error('Reload error:', reloadError);
+          window.Toast?.error?.('Đã lưu thành công nhưng không thể tải lại danh sách. Vui lòng refresh trang (F5).');
+          // Show current data even if reload fails
+          document.getElementById('productTableBody').innerHTML = `
+            <tr>
+              <td colspan="7" class="text-center py-4">
+                <i class="fas fa-exclamation-circle text-warning fs-3 mb-2"></i>
+                <p class="mb-2">Không thể tải lại danh sách</p>
+                <button class="btn btn-sm btn-success" onclick="loadProducts(${currentPage})">
+                  <i class="fas fa-redo me-1"></i>Thử lại
+                </button>
+              </td>
+            </tr>
+          `;
+        }
+
+      } catch (error) {
+        console.error('Save product error:', error);
+        window.Toast?.error?.(error.message || 'Không thể lưu sản phẩm');
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+      }
+    }
+
+    /**
+     * Delete product
+     */
+    async function deleteProduct(productId) {
+      if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
+        return;
+      }
+
+      // Show loading state on the delete button
+      const deleteBtn = event.target.closest('button');
+      if (deleteBtn) {
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+      }
+
+      try {
+        console.log('🗑️ Deleting product:', productId);
+        
+        const result = await ProductService.delete(productId);
+        console.log('✅ Delete result:', result);
+        
+        window.Toast?.success?.('Xóa sản phẩm thành công!');
+        
+        // Wait a bit before reloading to ensure backend is updated
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Force reload with cache busting
+        console.log('🔄 Reloading products on page:', currentPage);
+        
+        // Clear cache by adding timestamp
+        const timestamp = Date.now();
+        await loadProducts(currentPage, timestamp);
+        
+        console.log('✅ Products reloaded successfully');
+        
+      } catch (error) {
+        console.error('❌ Delete product error:', error);
+        window.Toast?.error?.(error.message || 'Không thể xóa sản phẩm');
+        
+        // Re-enable button on error
+        if (deleteBtn) {
+          deleteBtn.disabled = false;
+          deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

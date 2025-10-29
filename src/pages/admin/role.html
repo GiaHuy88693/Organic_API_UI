@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Role Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8f9fa;
+      }
+      /* Ensure header dropdown works properly */
+      #header {
+        position: relative;
+        z-index: 1050;
+      }
+      .dropdown-menu {
+        z-index: 1051 !important;
+      }
+      .badge-active {
+        background-color: #28a745;
+      }
+      .badge-inactive {
+        background-color: #dc3545;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="header"></div>
+
+    <div class="container my-5">
+      <div class="card shadow-sm rounded-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <!-- Left: Back to Dashboard -->
+            <a href="/src/pages/admin/dashboard.html" class="btn btn-sm btn-outline-secondary">
+              <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+            
+            <!-- Center: Title -->
+            <h4 class="mb-0 fw-bold text-center flex-grow-1">Quản lý vai trò</h4>
+            
+            <!-- Right: Add button -->
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#roleModal" onclick="openCreateModal()">
+              <i class="fas fa-plus me-2"></i>Thêm vai trò
+            </button>
+          </div>
+
+          <!-- Table -->
+          <div class="table-responsive">
+            <table class="table table-hover align-middle bg-white">
+              <thead class="table-light">
+                <tr>
+                  <th>Tên vai trò</th>
+                  <th>Slug</th>
+                  <th>Mô tả</th>
+                  <th>Trạng thái</th>
+                  <th style="width: 200px">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="roleTableBody">
+                <tr>
+                  <td colspan="5" class="text-center py-4">
+                    <div class="spinner-border text-success" role="status">
+                      <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="footer"></div>
+
+    <!-- Modal Create/Edit -->
+    <div class="modal fade" id="roleModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Thêm vai trò mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="roleForm" novalidate>
+            <div class="modal-body">
+              <input type="hidden" id="roleId" />
+              
+              <div class="mb-3">
+                <label class="form-label">Tên vai trò <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="roleName" required />
+                <div class="invalid-feedback">Vui lòng nhập tên vai trò</div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Slug <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="roleSlug" required />
+                <div class="form-text">Chỉ chữ thường, số và dấu gạch ngang. VD: admin, user, manager</div>
+                <div class="invalid-feedback">Vui lòng nhập slug</div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Mô tả</label>
+                <textarea class="form-control" id="roleDescription" rows="3"></textarea>
+              </div>
+
+              <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="roleIsActive" checked />
+                <label class="form-check-label" for="roleIsActive">Kích hoạt</label>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+              <button type="submit" class="btn btn-success" id="submitBtn">
+                <i class="fas fa-save me-1"></i>Lưu
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="/src/js/config/api.config.js"></script>
+    <script src="/src/js/utils/storage.js"></script>
+    <script src="/src/js/utils/toast.js"></script>
+    <script src="/src/js/utils/auth.guard.js"></script>
+    <script src="/src/js/utils/http.client.js"></script>
+    <script src="/src/js/services/auth.service.js"></script>
+    <script src="/src/js/services/role.service.js"></script>
+
+    <script>
+      // Protect admin route
+      if (!window.AuthGuard?.requireAdmin?.()) {
+        throw new Error('Access denied');
+      }
+    </script>
+
+    <script>
+      let editingRoleId = null;
+
+      document.addEventListener("DOMContentLoaded", () => {
+        loadHeaderFooter();
+        loadRoles();
+        document.getElementById("roleForm").addEventListener("submit", handleFormSubmit);
+        
+        // Auto-generate slug from name
+        document.getElementById("roleName").addEventListener("input", (e) => {
+          const slug = e.target.value
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+          document.getElementById("roleSlug").value = slug;
+        });
+      });
+
+      async function loadHeaderFooter() {
+        try {
+          const [headerHtml, footerHtml] = await Promise.all([
+            fetch("/src/header.html").then((res) => res.text()),
+            fetch("/src/footer.html").then((res) => res.text()),
+          ]);
+
+          document.getElementById("header").innerHTML = headerHtml;
+          document.getElementById("footer").innerHTML = footerHtml;
+
+          execScriptsIn(document.getElementById("header"));
+          execScriptsIn(document.getElementById("footer"));
+
+          // Debug: Add click listener to see if events are firing
+          setTimeout(() => {
+            const userDropdown = document.getElementById('userDropdown');
+            if (userDropdown) {
+              console.log('User dropdown element found:', userDropdown);
+              console.log('Has data-bs-toggle:', userDropdown.getAttribute('data-bs-toggle'));
+              
+              // Try to manually toggle on click
+              userDropdown.addEventListener('click', function(e) {
+                console.log('User dropdown clicked!', e);
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const dropdownInstance = bootstrap.Dropdown.getOrCreateInstance(userDropdown);
+                console.log('Dropdown instance:', dropdownInstance);
+                dropdownInstance.toggle();
+              });
+            }
+          }, 100);
+        } catch (error) {
+          console.error("Error loading header/footer:", error);
+        }
+      }
+
+      function execScriptsIn(container) {
+        if (!container) return;
+        const scripts = Array.from(container.querySelectorAll("script"));
+        scripts.forEach((oldScript) => {
+          const newScript = document.createElement("script");
+          if (oldScript.src) newScript.src = oldScript.src;
+          else newScript.textContent = oldScript.textContent;
+          oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
+      }
+
+      async function loadRoles() {
+        const tbody = document.getElementById("roleTableBody");
+        
+        try {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="text-center py-4">
+                <div class="spinner-border text-success" role="status">
+                  <span class="visually-hidden">Đang tải...</span>
+                </div>
+              </td>
+            </tr>
+          `;
+
+          const { items } = await window.RoleService.list();
+
+          if (items.length === 0) {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="5" class="text-center py-4 text-muted">
+                  <i class="fas fa-shield-alt fa-2x mb-2 d-block"></i>
+                  <p class="mb-0">Chưa có vai trò nào</p>
+                </td>
+              </tr>
+            `;
+            return;
+          }
+
+          tbody.innerHTML = items.map((role) => {
+            const description = role.description || '<span class="text-muted fst-italic">Không có mô tả</span>';
+            const statusBadge = role.isActive 
+              ? '<span class="badge badge-active">Hoạt động</span>'
+              : '<span class="badge badge-inactive">Tắt</span>';
+            const isSystemRole = ['ADMIN', 'CLIENT', 'USER'].includes(role.slug?.toUpperCase() || role.name?.toUpperCase());
+
+            return `
+              <tr>
+                <td class="fw-semibold">${role.name}</td>
+                <td><code>${role.slug || role.name.toLowerCase()}</code></td>
+                <td>${description}</td>
+                <td>${statusBadge}</td>
+                <td>
+                  <button class="btn btn-sm btn-warning me-1" onclick="openEditModal('${role._id || role.id}')" ${isSystemRole ? 'disabled title="Không thể sửa vai trò hệ thống"' : ''}>
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  ${isSystemRole ? '' : `
+                    <button class="btn btn-sm btn-danger" onclick="deleteRole('${role._id || role.id}', '${role.name}')">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  `}
+                  ${!role.deletedAt ? '' : `
+                    <button class="btn btn-sm btn-success" onclick="restoreRole('${role._id || role.id}', '${role.name}')">
+                      <i class="fas fa-undo"></i> Khôi phục
+                    </button>
+                  `}
+                </td>
+              </tr>
+            `;
+          }).join("");
+
+        } catch (error) {
+          console.error("Load roles error:", error);
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="text-center py-4 text-danger">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>
+                <p class="mb-0">${error.message || "Không thể tải danh sách vai trò"}</p>
+              </td>
+            </tr>
+          `;
+          window.Toast?.error?.(error.message || "Không thể tải danh sách vai trò");
+        }
+      }
+
+      function openCreateModal() {
+        editingRoleId = null;
+        document.getElementById("modalTitle").textContent = "Thêm vai trò mới";
+        document.getElementById("roleForm").reset();
+        document.getElementById("roleId").value = "";
+        document.getElementById("roleIsActive").checked = true;
+        document.getElementById("roleForm").classList.remove("was-validated");
+      }
+
+      async function openEditModal(roleId) {
+        try {
+          editingRoleId = roleId;
+          document.getElementById("modalTitle").textContent = "Chỉnh sửa vai trò";
+          
+          const role = await window.RoleService.getById(roleId);
+          
+          document.getElementById("roleId").value = role._id || role.id;
+          document.getElementById("roleName").value = role.name;
+          document.getElementById("roleSlug").value = role.slug || role.name.toLowerCase();
+          document.getElementById("roleDescription").value = role.description || "";
+          document.getElementById("roleIsActive").checked = role.isActive !== false;
+
+          const modal = new bootstrap.Modal(document.getElementById("roleModal"));
+          modal.show();
+
+        } catch (error) {
+          console.error("Load role error:", error);
+          window.Toast?.error?.(error.message || "Không thể tải thông tin vai trò");
+        }
+      }
+
+      async function handleFormSubmit(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        if (!form.checkValidity()) {
+          form.classList.add("was-validated");
+          return;
+        }
+
+        const name = document.getElementById("roleName").value.trim();
+        const slug = document.getElementById("roleSlug").value.trim();
+        const description = document.getElementById("roleDescription").value.trim();
+        const isActive = document.getElementById("roleIsActive").checked;
+
+        if (!name || !slug) {
+          window.Toast?.error?.("Vui lòng nhập đầy đủ thông tin");
+          return;
+        }
+
+        const payload = { name, slug, isActive };
+        if (description) payload.description = description;
+
+        const submitBtn = document.getElementById("submitBtn");
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang lưu...';
+
+        try {
+          if (editingRoleId) {
+            await window.RoleService.update(editingRoleId, payload);
+            window.Toast?.success?.("Cập nhật vai trò thành công");
+          } else {
+            await window.RoleService.create(payload);
+            window.Toast?.success?.("Tạo vai trò thành công");
+          }
+
+          bootstrap.Modal.getInstance(document.getElementById("roleModal")).hide();
+          loadRoles();
+          form.reset();
+          form.classList.remove("was-validated");
+
+        } catch (error) {
+          console.error("Save role error:", error);
+          window.Toast?.error?.(error.message || "Không thể lưu vai trò");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Lưu';
+        }
+      }
+
+      async function deleteRole(roleId, roleName) {
+        const confirmed = confirm(`Bạn có chắc chắn muốn xóa vai trò "${roleName}"?`);
+        if (!confirmed) return;
+
+        try {
+          await window.RoleService.delete(roleId);
+          window.Toast?.success?.("Xóa vai trò thành công");
+          loadRoles();
+        } catch (error) {
+          console.error("Delete role error:", error);
+          window.Toast?.error?.(error.message || "Không thể xóa vai trò");
+        }
+      }
+
+      async function restoreRole(roleId, roleName) {
+        const confirmed = confirm(`Khôi phục vai trò "${roleName}"?`);
+        if (!confirmed) return;
+
+        try {
+          await window.RoleService.restore(roleId);
+          window.Toast?.success?.("Khôi phục vai trò thành công");
+          loadRoles();
+        } catch (error) {
+          console.error("Restore role error:", error);
+          window.Toast?.error?.(error.message || "Không thể khôi phục vai trò");
+        }
+      }
+    </script>
+  </body>
+</html>

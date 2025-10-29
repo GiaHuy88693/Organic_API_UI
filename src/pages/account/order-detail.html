@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Order Details</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* === CSS của bạn, giữ nguyên === */
+      body {
+        background-color: #f9f9f9;
+        font-family: "Poppins", sans-serif;
+      }
+      .order-detail-wrapper {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 2rem;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+        min-width: 800px;
+      }
+      .order-detail-wrapper h2 {
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 1.2rem;
+      }
+      .order-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        font-size: 14px;
+        color: #666;
+      }
+      .order-meta a {
+        color: #28a745;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .status-bar {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin: 30px 0 40px;
+        padding: 0 10px;
+      }
+      .status-bar::before {
+        content: "";
+        position: absolute;
+        top: 18px;
+        left: 12%;
+        right: 12%;
+        height: 3px;
+        background: #e5e5e5;
+        z-index: 0;
+      }
+      .status-step {
+        text-align: center;
+        width: 25%;
+        position: relative;
+        z-index: 1;
+        color: #bbb;
+        font-size: 13px;
+      }
+      .status-step .circle {
+        width: 28px;
+        height: 28px;
+        margin: 0 auto 8px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        line-height: 28px;
+        font-size: 14px;
+        color: #fff;
+      }
+      .status-step.active {
+        color: #22c55e;
+        font-weight: 600;
+      }
+      .status-step.active .circle {
+        background: #22c55e;
+      }
+      .status-step.active .circle::before {
+        content: "✓";
+      }
+      .info-boxes {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .info-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+      }
+      .info-row:first-child .info-card {
+        flex: 1;
+        min-width: 280px;
+      }
+      .info-row:last-child .info-card {
+        width: 100%;
+      }
+      .info-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1rem;
+        background: #fff;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .info-card strong {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 6px;
+        color: #222;
+      }
+      .billing-info .billing-item,
+      .order-info .order-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px dashed #eee;
+        font-size: 14px;
+      }
+      .billing-info .billing-item:last-child,
+      .order-info .order-item:last-child {
+        border-bottom: none;
+      }
+      .order-info .order-item.total strong {
+        color: #22c55e;
+        font-weight: 600;
+      }
+      .product-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        margin-top: 1rem;
+      }
+      .product-table th {
+        text-align: left;
+        font-weight: 600;
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+      }
+      .product-table td {
+        padding: 12px;
+        border-bottom: 1px solid #f1f1f1;
+        vertical-align: middle;
+      }
+      .product-table td:first-child {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .product-table img {
+        width: 44px;
+        height: 44px;
+        object-fit: contain;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="order-detail-wrapper" id="orderDetail">
+      <h2>Order Details</h2>
+
+      <div class="status-bar">
+        <div class="status-step active">
+          <div class="circle">✓</div>
+          <div>Order received</div>
+        </div>
+        <div class="status-step active">
+          <div class="circle">✓</div>
+          <div>Processing</div>
+        </div>
+        <div class="status-step">
+          <div class="circle"></div>
+          <div>On the way</div>
+        </div>
+        <div class="status-step">
+          <div class="circle"></div>
+          <div>Delivered</div>
+        </div>
+      </div>
+
+      <div class="order-meta">
+        <div id="odDate">📅 …</div>
+        <div id="odCount">🛒 …</div>
+        <a href="/src/pages/account/orders.html">← Back to List</a>
+      </div>
+
+      <div class="info-boxes">
+        <div class="info-row">
+          <div class="info-card billing-info">
+            <strong style="margin-bottom: 12px">BILLING ADDRESS</strong>
+            <div class="billing-item">
+              <span>Name:</span><strong id="odName">—</strong>
+            </div>
+            <div class="billing-item">
+              <span>Address:</span><strong id="odAddress">—</strong>
+            </div>
+            <div class="billing-item">
+              <span>Email:</span><strong id="odEmail">—</strong>
+            </div>
+            <div class="billing-item">
+              <span>Phone:</span><strong id="odPhone">—</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-card order-info">
+            <div class="order-item">
+              <span>ORDER ID:</span><strong id="odId">#—</strong>
+            </div>
+            <div class="order-item">
+              <span>Payment Method:</span><strong id="odPay">—</strong>
+            </div>
+            <div class="order-item">
+              <span>Subtotal:</span><strong id="odSub">—</strong>
+            </div>
+            <div class="order-item">
+              <span>Discount:</span><strong id="odDiscount">0%</strong>
+            </div>
+            <div class="order-item">
+              <span>Shipping:</span><strong id="odShip">Free</strong>
+            </div>
+            <div class="order-item total">
+              <span>Total:</span><strong id="odTotal">—</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <table class="product-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody id="odItems"></tbody>
+      </table>
+    </div>
+
+    <script type="module">
+      // ===== Helpers =====
+      const fmtMoney = (n) =>
+        new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+          maximumFractionDigits: 0,
+        }).format(Number(n || 0));
+      const fmtDate = (d) => {
+        try {
+          return new Date(d).toLocaleDateString("vi-VN");
+        } catch {
+          return d || "";
+        }
+      };
+
+      const LS_KEYS = { billing: "billingAddress" };
+      const readFromLS = (k) => {
+        try {
+          return JSON.parse(localStorage.getItem(k) || "{}");
+        } catch {
+          return {};
+        }
+      };
+
+      // Lấy token
+      function getAccessToken() {
+        if (window.Storage?.getToken) {
+          try {
+            return window.Storage.getToken();
+          } catch {}
+        }
+        return (
+          localStorage.getItem("access_token") ||
+          localStorage.getItem("accessToken") ||
+          ""
+        );
+      }
+      function getApiBase() {
+        return (
+          window.API?.BASE_URL ||
+          window.API?.BASE ||
+          window.HttpClient?.BASE_URL ||
+          "http://localhost:8080"
+        ).replace(/\/+$/, "");
+      }
+      function toAbsUrl(pathOrUrl) {
+        if (!pathOrUrl) return pathOrUrl;
+        if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+        if (pathOrUrl.startsWith("/")) return `${getApiBase()}${pathOrUrl}`;
+        return pathOrUrl;
+      }
+      // Cache ảnh theo productId để tránh gọi lặp
+      const _imgCache = new Map();
+
+      async function fetchProductImages(productId) {
+        if (!productId) return [];
+        if (_imgCache.has(productId)) return _imgCache.get(productId);
+
+        const endpoint = toAbsUrl(
+          `/api/v1/product/${encodeURIComponent(productId)}/images`
+        );
+        let data;
+        if (window.HttpClient?.request) {
+          const res = await window.HttpClient.request(endpoint, {
+            method: "GET",
+            withAuth: true,
+          });
+          data = res?.data ?? res;
+        } else {
+          const token =
+            localStorage.getItem("access_token") ||
+            localStorage.getItem("accessToken") ||
+            "";
+          const res = await fetch(endpoint, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+          data = await res.json();
+        }
+
+        const urls = (
+          Array.isArray(data) ? data : data?.items || data?.data || []
+        )
+          .map((x) => x?.url || x?.imageUrl || x?.path || x?.image || x)
+          .filter(Boolean)
+          .map(toAbsUrl);
+
+        _imgCache.set(productId, urls);
+        return urls;
+      }
+      function normItem(it) {
+        const p = it.product || {};
+        const productId = p.id || p._id || it.productId || it.id;
+        const name =
+          it.name ||
+          p.name ||
+          p.productName ||
+          `#${(productId || "").slice(-6)}`;
+        const price = it.price ?? p.price ?? 0;
+        const quantity = it.quantity ?? it.qty ?? 1;
+        // image sẽ gắn sau khi gọi API ảnh
+        return { productId, name, price, quantity, image: null };
+      }
+
+      // Resolve URL detail
+      function resolveOrderDetailUrl(id) {
+        const base =
+          window.API?.ORDER?.DETAIL ||
+          window.API?.ORDERS?.DETAIL ||
+          `http://localhost:8080/api/v1/order/${encodeURIComponent(id)}`;
+        // Nếu base đã chứa :id thì thay
+        return base.includes(":id")
+          ? base.replace(":id", encodeURIComponent(id))
+          : base;
+      }
+
+      // Gọi endpoint thật (ưu tiên OrderService nếu có)
+      async function fetchOrderDetail(id) {
+        if (window.OrderService?.get) {
+          const r = await window.OrderService.get(id);
+          return r?.data || r;
+        }
+        const url = resolveOrderDetailUrl(id);
+        const res =
+          (await window.HttpClient?.request?.(url, {
+            method: "GET",
+            withAuth: true,
+          })) ??
+          (await fetch(url, {
+            headers: { Authorization: `Bearer ${getAccessToken()}` },
+          }).then((r) => r.json()));
+        // Swagger bạn show trả trực tiếp object { id, userId, totalAmount, createdAt, items: [...] }
+        return res?.data ?? res;
+      }
+
+      // Chuẩn hóa item
+      
+
+      // Render
+      async function renderOrder(o) {
+        // Map trường theo payload swagger
+        const id = o.id || o._id || o.orderId || "";
+        const createdAt = o.createdAt || o.created_at || Date.now();
+        const total = o.totalAmount ?? o.total ?? o.totalPrice ?? 0;
+        const items = Array.isArray(o.items) ? o.items.map(normItem) : [];
+
+        // Billing fallback: lấy từ order nếu có, nếu không lấy localStorage
+        const billingLS = readFromLS(LS_KEYS.billing);
+        const name =
+          o.name ||
+          [billingLS.first_name, billingLS.last_name]
+            .filter(Boolean)
+            .join(" ") ||
+          "—";
+        const phone = o.phone || billingLS.phone || "—";
+        const address =
+          o.address ||
+          [
+            billingLS.street_address,
+            billingLS.state_id,
+            billingLS.country_id,
+            billingLS.zip_code,
+          ]
+            .filter(Boolean)
+            .join(", ") ||
+          "—";
+        const email = o.email || window.AuthGuard?.getUser?.()?.email || "—";
+
+        // === LẤY ẢNH CHO TẤT CẢ ITEMS ===
+        const uniqueIds = [
+          ...new Set(items.map((x) => x.productId).filter(Boolean)),
+        ];
+        const idToImages = {};
+        await Promise.all(
+          uniqueIds.map(async (pid) => {
+            try {
+              idToImages[pid] = await fetchProductImages(pid);
+            } catch (e) {
+              console.warn("Fetch images error for", pid, e);
+              idToImages[pid] = [];
+            }
+          })
+        );
+        items.forEach((it) => {
+          const list = idToImages[it.productId] || [];
+          it.image = list[0] || "/src/assets/no-image.png";
+        });
+
+        // Đổ meta
+        document.getElementById("odDate").textContent = `📅 ${fmtDate(
+          createdAt
+        )}`;
+        document.getElementById("odCount").textContent = `🛒 ${items.length} ${
+          items.length > 1 ? "Products" : "Product"
+        }`;
+        document.getElementById("odId").textContent = `#${id}`;
+        document.getElementById("odPay").textContent = o.paymentMethod || "—";
+        document.getElementById("odSub").textContent = fmtMoney(total); // nếu cần có subtotal riêng thì tính lại
+        document.getElementById("odTotal").textContent = fmtMoney(total);
+
+        document.getElementById("odName").textContent = name;
+        document.getElementById("odPhone").textContent = phone;
+        document.getElementById("odAddress").textContent = address;
+        document.getElementById("odEmail").textContent = email;
+
+        // Sản phẩm
+        const tbody = document.getElementById("odItems");
+        tbody.innerHTML =
+          items
+            .map((it) => {
+              const sub = (Number(it.price) || 0) * (Number(it.quantity) || 0);
+              return `
+        <tr>
+          <td><img src="${
+            it.image
+          }" alt="" onerror="this.src='/src/assets/no-image.png'"><span>${
+                it.name
+              }</span></td>
+          <td>${fmtMoney(it.price)}</td>
+          <td>x${it.quantity}</td>
+          <td>${fmtMoney(sub)}</td>
+        </tr>`;
+            })
+            .join("") ||
+          `<tr><td colspan="4" class="text-muted">No items</td></tr>`;
+      }
+
+      // Init
+      (async function init() {
+        const id = new URLSearchParams(location.search).get("id");
+        if (!id) {
+          window.Toast?.error?.("Missing order id");
+          location.href = "/src/pages/account/orders.html";
+          return;
+        }
+        if (window.AuthGuard?.requireAuth && !window.AuthGuard.requireAuth())
+          return;
+
+        try {
+          const order = await fetchOrderDetail(id);
+          if (!order || !(order.id || order._id))
+            throw new Error("Order not found");
+          await renderOrder(order); // <— có await vì renderOrder là async
+        } catch (e) {
+          console.error(e);
+          window.Toast?.error?.(e.message || "Không thể tải chi tiết đơn hàng");
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chi tiết sản phẩm</title>
+
+    <!-- CSS dự án -->
+    <link rel="stylesheet" href="/list.css" />
+    <link rel="stylesheet" href="/src/css/show.css" />
+
+    <!-- Icons + Fancybox -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.css"
+    />
+
+    <style>
+      /* --- Sticky footer layout để footer không đè nội dung --- */
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        display: flex;
+        min-height: 100vh;
+        flex-direction: column;
+      }
+      #productDetailRoot {
+        flex: 1 0 auto;
+      }
+      #footer {
+        flex-shrink: 0;
+        position: static !important;
+        margin-top: 32px;
+      }
+
+      /* --- Khung ảnh & thumbnail --- */
+      .product-detail-main .main-img-box {
+        border: 1.5px solid #eee;
+        border-radius: 12px;
+        background: #fff;
+        width: 100%;
+        max-width: 380px;
+        aspect-ratio: 1 / 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        overflow: hidden;
+      }
+      .product-detail-main .main-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      @media (max-width: 991px) {
+        .product-detail-main .main-img-box {
+          max-width: 100%;
+        }
+      }
+      .thumb-img {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 10px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: transform 0.2s, border-color 0.2s;
+      }
+      .thumb-img:hover {
+        transform: scale(1.05);
+        border-color: #38b000;
+      }
+
+      .related-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #fff;
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+      .related-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .related-cart-btn {
+        background: #f8f9fa;
+        border: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+      }
+      .related-cart-btn:hover {
+        background: #e2e6ea;
+      }
+
+      .sale-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 2;
+        background: #dc3545;
+        color: #fff;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      .product-image-container {
+        position: relative;
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .no-image-placeholder {
+        color: #999;
+        padding: 32px 0;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="header"></div>
+
+    <div class="container py-5" id="productDetailRoot">
+      <div id="loading" class="text-center py-5" style="display: none">
+        <i
+          class="bi bi-arrow-repeat"
+          style="font-size: 3rem; animation: spin 1s linear infinite"
+        ></i>
+        <p class="mt-3">Đang tải sản phẩm...</p>
+      </div>
+      <div
+        id="errorBox"
+        class="alert alert-danger mt-4"
+        role="alert"
+        style="display: none"
+      >
+        Không tìm thấy sản phẩm.
+      </div>
+      <div id="detailContainer"></div>
+    </div>
+
+    <div id="footer"></div>
+
+    <!-- Config & Services -->
+    <script src="../../js/config/api.config.js"></script>
+    <script src="../../js/utils/storage.js"></script>
+    <script src="../../js/utils/http.client.js"></script>
+    <script src="../../js/services/auth.service.js"></script>
+    <script src="../../js/services/product.service.js"></script>
+    <script src="../../js/services/cart.service.js"></script>
+
+    <!-- Fancybox + Toastify -->
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <script>
+      /* ---------- Helpers ---------- */
+      const qs = (s, r = document) => r.querySelector(s);
+      const qsa = (s, r = document) => [...r.querySelectorAll(s)];
+      const formatCurrencyVND = (n) =>
+        new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(n || 0);
+      const escapeHtml = (s) =>
+        String(s || "").replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[m])
+        );
+
+      function getProductIdFromURL() {
+        const p = new URLSearchParams(window.location.search);
+        return (
+          p.get("id") ||
+          window.location.pathname.split("/").filter(Boolean).pop()
+        );
+      }
+
+      // Tạo URL hình ảnh an toàn từ path/url backend
+      function buildImg(p) {
+        if (!p) return "";
+        const s = String(p).trim();
+        if (/^(https?:)?\/\//i.test(s) || s.startsWith("data:")) return s;
+        const base =
+          (window.API_CONFIG &&
+            (window.API_CONFIG.ASSET_BASE || window.API_CONFIG.BASE_URL)) ||
+          "";
+        const cleanedBase = base.replace(/\/+$/, "");
+        const cleanedPath = s.replace(/^\/+/, "");
+        return cleanedBase
+          ? `${cleanedBase}/${cleanedPath}`
+          : `/${cleanedPath}`;
+      }
+
+      // Chuẩn hoá mảng ảnh: hỗ trợ "string" | {url} | {path}
+      function normalizeImages(arr) {
+        return (arr || [])
+          .map((im) =>
+            typeof im === "string" ? im : im?.url || im?.path || ""
+          )
+          .filter(Boolean);
+      }
+
+      // Link tới trang show của chính project (dùng query id)
+      function buildShowUrl(id) {
+        const dir = window.location.pathname.replace(/[^/]+$/, ""); // .../src/pages/product/
+        return `${dir}show.html?id=${encodeURIComponent(id)}`;
+      }
+
+      let currentProduct = null,
+        currentQty = 1;
+
+      /* ---------- UI: render ---------- */
+      function renderDetail(product, related = []) {
+        const images = normalizeImages(product.images);
+        const mainImg = images[0] || "";
+        const priceNow = product.price || 0;
+        const priceOld = priceNow * 2;
+        const sku = product._id || product.id || "";
+
+        const html = `
+          <div class="row g-5 align-items-start product-detail-main">
+            <!-- Gallery -->
+            <div class="col-md-5">
+              <div class="d-flex flex-column align-items-center">
+                <div class="main-img-box mb-3">
+                  ${
+                    mainImg
+                      ? `<a href="${buildImg(
+                          mainImg
+                        )}" data-fancybox="gallery" data-caption="${escapeHtml(
+                          product.name
+                        )}">
+                           <img src="${buildImg(
+                             mainImg
+                           )}" class="main-img" alt="${escapeHtml(
+                          product.name
+                        )}"/>
+                         </a>`
+                      : `<div class="no-image-placeholder"><i class="bi bi-image" style="font-size:2rem;"></i></div>`
+                  }
+                </div>
+                ${
+                  images.length
+                    ? `<div class="d-flex flex-wrap gap-2 align-items-center">
+                        ${images
+                          .map(
+                            (img) => `
+                          <a href="${buildImg(
+                            img
+                          )}" data-fancybox="gallery" data-caption="${escapeHtml(
+                              product.name
+                            )}">
+                            <img src="${buildImg(
+                              img
+                            )}" class="thumb-img" alt="thumb"/>
+                          </a>`
+                          )
+                          .join("")}
+                      </div>`
+                    : ""
+                }
+              </div>
+            </div>
+
+            <!-- Info -->
+            <div class="col-md-7">
+              <h2 class="fw-bold mb-2">
+                ${escapeHtml(product.name || "Sản phẩm")}
+                <span class="badge bg-success align-middle ms-2" style="font-size:.9rem;">In Stock</span>
+              </h2>
+
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <span class="text-warning fs-5">★★★★☆</span>
+                <span class="text-muted small">${
+                  product.reviewCount || 4
+                } Review</span>
+                <span class="text-muted small">• SKU: ${escapeHtml(
+                  String(sku)
+                )}</span>
+              </div>
+
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <span class="text-decoration-line-through text-muted fs-5">${formatCurrencyVND(
+                  priceOld
+                )}</span>
+                <span class="fs-3 fw-bold text-success">${formatCurrencyVND(
+                  priceNow
+                )}</span>
+                <span class="badge bg-danger-subtle text-danger" style="font-size:1rem;">50% Off</span>
+              </div>
+
+              <div class="mb-3 text-secondary" style="max-width:600px;">${escapeHtml(
+                product.description || ""
+              )}</div>
+
+              <!-- Qty + Add to cart + Wishlist -->
+              <form class="d-flex align-items-center gap-3 mb-3" style="max-width:100%;">
+                <div class="qty-group d-flex align-items-center">
+                  <button type="button" class="qty-btn" data-delta="-1">&#8722;</button>
+                  <input type="number" id="qty" name="qty" value="1" min="1" class="qty-input" />
+                  <button type="button" class="qty-btn" data-delta="1">&#43;</button>
+                </div>
+
+                <button type="button" class="add-cart-btn flex-grow-1" id="addToCartBtn">
+                  <span>Add to Cart</span><i class="bi bi-bag ms-2"></i>
+                </button>
+
+                <button type="button" class="wishlist-btn-custom ms-2" id="wishlistToggle">
+                  <i class="bi bi-heart fs-5"></i>
+                </button>
+              </form>
+
+              <div class="mb-3">
+                <span class="me-2">Share item:</span>
+                <a href="#" class="text-success me-2"><i class="bi bi-facebook fs-5"></i></a>
+                <a href="#" class="text-info me-2"><i class="bi bi-twitter fs-5"></i></a>
+                <a href="#" class="text-dark me-2"><i class="bi bi-pinterest fs-5"></i></a>
+                <a href="#" class="text-dark"><i class="bi bi-instagram fs-5"></i></a>
+              </div>
+
+              <div><strong>Category:</strong> ${escapeHtml(
+                product.category?.name || product.category_name || "Không có"
+              )}</div>
+            </div>
+          </div>
+
+          ${
+            related.length
+              ? `
+                <div class="container my-5 px-0">
+                  <h3 class="text-center fw-bold mb-4">Related Products</h3>
+                  <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
+                    ${related.map(renderRelatedCard).join("")}
+                  </div>
+                </div>
+              `
+              : ""
+          }
+        `;
+
+        qs("#detailContainer").innerHTML = html;
+
+        // Qty events
+        qsa(".qty-btn").forEach((btn) =>
+          btn.addEventListener("click", () =>
+            changeQty(parseInt(btn.dataset.delta, 10))
+          )
+        );
+        qs("#addToCartBtn").addEventListener("click", async () => {
+          try {
+            await window.CartService.add({
+              productId: product._id || product.id,
+              quantity: currentQty,
+            });
+            Toastify({
+              text: "Đã thêm vào giỏ hàng!",
+              className: "toast-success",
+            }).showToast();
+          } catch (e) {
+            Toastify({
+              text: "Không thể thêm vào giỏ hàng",
+              className: "toast-error",
+            }).showToast();
+          }
+        });
+        qs("#wishlistToggle").addEventListener("click", (e) => {
+          const icon = e.currentTarget.querySelector("i");
+          e.currentTarget.classList.toggle("active");
+          icon.classList.toggle("bi-heart");
+          icon.classList.toggle("bi-heart-fill");
+        });
+
+        Fancybox.bind("[data-fancybox='gallery']", {
+          Thumbs: { autoStart: true },
+        });
+      }
+
+      function renderRelatedCard(p) {
+        const hasDiscount = Math.random() > 0.5;
+        const discount = hasDiscount ? Math.floor(Math.random() * 41) + 10 : 0;
+        const img =
+          p.thumbnail ||
+          p.images?.[0]?.url ||
+          p.images?.[0]?.path ||
+          p.images?.[0] ||
+          "";
+        const price = p.price || 0;
+        const url = buildShowUrl(
+          p._id || p.id
+        ); /* ✅ mở qua show.html?id=... */
+
+        return `
+          <div class="col">
+            <a class="related-card h-100 p-2 text-decoration-none d-block" href="${url}">
+              <div class="product-image-container mb-2">
+                ${
+                  img
+                    ? `<img src="${buildImg(img)}" alt="${escapeHtml(
+                        p.name
+                      )}" style="max-height:140px;object-fit:contain;"/>`
+                    : `<div class="no-image-placeholder"><i class="bi bi-image" style="font-size:2rem;"></i></div>`
+                }
+                ${
+                  hasDiscount
+                    ? `<div class="sale-badge">Sale ${discount}%</div>`
+                    : ""
+                }
+              </div>
+              <div class="px-2 pb-2">
+                <div class="product-name mb-1 fw-semibold text-dark">${escapeHtml(
+                  p.name || "Sản phẩm"
+                )}</div>
+                <div class="d-flex align-items-center gap-2">
+                  ${
+                    hasDiscount
+                      ? `<span class="text-muted text-decoration-line-through small">${formatCurrencyVND(
+                          price
+                        )}</span>`
+                      : ""
+                  }
+                  <span class="fw-bold text-success">${formatCurrencyVND(
+                    hasDiscount ? price * (1 - discount / 100) : price
+                  )}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                  <span class="text-warning small">★★★★☆</span>
+                  <span class="related-cart-btn"><i class="bi bi-bag"></i></span>
+                </div>
+              </div>
+            </a>
+          </div>
+        `;
+      }
+
+      function changeQty(d) {
+        currentQty = Math.max(1, (currentQty || 1) + d);
+        const i = qs("#qty");
+        if (i) i.value = currentQty;
+      }
+
+      /* ---------- Data load ---------- */
+      async function loadDetail() {
+        const id = getProductIdFromURL();
+        if (!id) return showError();
+
+        toggleLoading(true);
+        try {
+          const svc = window.ProductService;
+          const resp = await svc.getById(id);
+          const product = resp?.data || resp;
+          if (!product || !(product._id || product.id)) return showError();
+
+          // Lấy ảnh từ API riêng và merge
+          let imgsFromApi = [];
+          try {
+            if (typeof svc.listImages === "function") {
+              const raw = await svc.listImages(product._id || product.id);
+              imgsFromApi = normalizeImages(raw);
+            }
+          } catch (e) {
+            console.warn("listImages error:", e);
+          }
+          const imgsInline = normalizeImages(product.images);
+          product.images = Array.from(new Set([...imgsInline, ...imgsFromApi]));
+
+          // Related
+          let related = [];
+          try {
+            if (typeof svc.list === "function") {
+              const r = await svc.list({ page: 1, limit: 12 });
+              const list = r?.items || r?.data || [];
+              related = list
+                .filter((p) => (p._id || p.id) !== (product._id || product.id))
+                .slice(0, 10);
+            }
+          } catch (_) {}
+
+          currentProduct = product;
+          renderDetail(product, related);
+        } catch (e) {
+          console.error("Load detail error:", e);
+          showError();
+        } finally {
+          toggleLoading(false);
+        }
+      }
+
+      function toggleLoading(show) {
+        qs("#loading").style.display = show ? "block" : "none";
+        qs("#detailContainer").style.display = show ? "none" : "block";
+      }
+      function showError() {
+        qs("#errorBox").style.display = "block";
+        qs("#detailContainer").style.display = "none";
+      }
+
+      /* ---------- Header/Footer giống trang cart (giữ trạng thái login) ---------- */
+      function execScriptsIn(container) {
+        if (!container) return Promise.resolve();
+        const scripts = Array.from(container.querySelectorAll("script"));
+        const loaders = scripts.map((oldScript) => {
+          const s = document.createElement("script");
+          if (oldScript.type) s.type = oldScript.type;
+          if (oldScript.noModule) s.noModule = true;
+          if (oldScript.defer) s.defer = true;
+          if (oldScript.crossOrigin) s.crossOrigin = oldScript.crossOrigin;
+          if (oldScript.integrity) s.integrity = oldScript.integrity;
+
+          if (oldScript.src) {
+            s.src = oldScript.src;
+            s.async = false;
+            const done = new Promise((res) => {
+              s.onload = res;
+              s.onerror = res;
+            });
+            oldScript.parentNode.replaceChild(s, oldScript);
+            return done;
+          }
+          s.textContent = oldScript.textContent;
+          oldScript.parentNode.replaceChild(s, oldScript);
+          return Promise.resolve();
+        });
+        return Promise.all(loaders);
+      }
+
+      async function loadHeaderFooter() {
+        try {
+          const [headerHtml, footerHtml] = await Promise.all([
+            fetch("/src/header.html").then((r) => r.text()),
+            fetch("/src/footer.html").then((r) => r.text()),
+          ]);
+
+          const header = document.getElementById("header");
+          const footer = document.getElementById("footer");
+
+          if (header) {
+            header.innerHTML = headerHtml;
+            await execScriptsIn(header);
+            window.applyAuthUI?.();
+          }
+          if (footer) {
+            footer.innerHTML = footerHtml;
+            await execScriptsIn(footer);
+          }
+        } catch (err) {
+          console.warn("Không thể tải header/footer:", err);
+        }
+      }
+
+      /* ---------- Init ---------- */
+      document.addEventListener("DOMContentLoaded", () => {
+        loadHeaderFooter();
+        loadDetail();
+      });
+    </script>
+  </body>
+</html>
